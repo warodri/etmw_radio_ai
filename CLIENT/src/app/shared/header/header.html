@@ -1,0 +1,99 @@
+<header
+  class="sticky top-0 z-50 border-b border-stone-200/70 bg-paper-50/80 backdrop-blur-xl dark:border-white/5 dark:bg-ink-950/80"
+>
+  <div class="app-container flex h-16 items-center justify-between gap-3 sm:h-[4.5rem]">
+    <a
+      routerLink="/"
+      class="group -m-1 flex min-w-0 items-center gap-3 rounded-2xl p-1"
+      aria-label="ETMW Radio AI — home"
+    >
+      <img
+        src="brand/logo-horizontal.png"
+        alt="ETMW Radio AI"
+        width="900"
+        height="300"
+        decoding="async"
+        class="h-10 w-auto shrink-0 transition-transform duration-300 group-hover:scale-[1.02] sm:h-14"
+      />
+    </a>
+
+    <div class="flex shrink-0 items-center gap-2">
+      <button
+        type="button"
+        class="icon-button"
+        (click)="toggleTheme()"
+        [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+        [attr.title]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+      >
+        @if (theme() === 'dark') {
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="h-[1.15rem] w-[1.15rem]"
+          >
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+          </svg>
+        } @else {
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="h-[1.15rem] w-[1.15rem]"
+          >
+            <path d="M20.2 14.6A8.5 8.5 0 0 1 9.4 3.8 8.5 8.5 0 1 0 20.2 14.6Z" />
+          </svg>
+        }
+      </button>
+
+      @if (isAuthenticated()) {
+        <a
+          routerLink="/profile"
+          class="group flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/70 py-1.5 pl-1.5 pr-3 transition-colors hover:border-brand-400/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/40"
+          aria-label="Open your account"
+        >
+          <span
+            class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white"
+          >
+            {{ initial() }}
+          </span>
+          <span
+            class="hidden max-w-[11rem] truncate text-sm font-semibold text-ink-800 sm:block dark:text-stone-200"
+          >
+            {{ user()?.email }}
+          </span>
+          <span class="text-sm font-semibold text-ink-800 sm:hidden dark:text-stone-200">
+            Account
+          </span>
+        </a>
+      } @else {
+        <a routerLink="/profile" class="btn-primary px-4 py-2.5">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="h-4 w-4"
+          >
+            <path d="M15 3h3.4c.9 0 1.6.7 1.6 1.6v14.8c0 .9-.7 1.6-1.6 1.6H15" />
+            <path d="M10 17l5-5-5-5" />
+            <path d="M15 12H3" />
+          </svg>
+          Login
+        </a>
+      }
+    </div>
+  </div>
+</header>

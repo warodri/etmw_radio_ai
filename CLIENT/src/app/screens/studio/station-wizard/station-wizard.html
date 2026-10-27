@@ -1,0 +1,608 @@
+<section class="app-container py-8 sm:py-12">
+  <a
+    routerLink="/studio"
+    class="mb-5 inline-flex items-center gap-2 rounded-full text-sm font-semibold text-stone-500 transition-colors hover:text-brand-700 dark:text-stone-400 dark:hover:text-brand-300"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      class="h-4 w-4"
+    >
+      <path d="M19 12H5" />
+      <path d="m11 18-6-6 6-6" />
+    </svg>
+    Back to your studio
+  </a>
+
+  <div class="mx-auto w-full max-w-3xl">
+    <header class="mb-6">
+      <p class="eyebrow">Station setup</p>
+      <h1
+        class="mt-2 font-display text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl dark:text-white"
+      >
+        {{ editing() ? 'Edit station' : 'Create a radio station' }}
+      </h1>
+      <p class="mt-2 max-w-xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+        {{
+          editing()
+            ? 'Update how this station sounds, looks and appears on the dial.'
+            : 'Three short steps to shape the identity, sound and first release of your station.'
+        }}
+      </p>
+    </header>
+
+    @if (loadingStation()) {
+      <div class="surface-card p-6 sm:p-8">
+        <div class="space-y-4">
+          <div class="h-4 w-1/4 animate-pulse rounded-full bg-stone-200/80 dark:bg-white/5"></div>
+          <div class="h-11 w-full animate-pulse rounded-2xl bg-stone-200/70 dark:bg-white/5"></div>
+          <div class="h-24 w-full animate-pulse rounded-2xl bg-stone-200/70 dark:bg-white/5"></div>
+          <div class="h-11 w-2/3 animate-pulse rounded-2xl bg-stone-200/70 dark:bg-white/5"></div>
+        </div>
+      </div>
+    } @else if (loadError()) {
+      <div class="surface-card flex flex-col items-center px-6 py-12 text-center">
+        <span
+          class="flex h-14 w-14 items-center justify-center rounded-3xl border border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-300"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            aria-hidden="true"
+            class="h-6 w-6"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7.5v5.5" />
+            <path d="M12 16.5h.01" />
+          </svg>
+        </span>
+        <h2 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">
+          Station unavailable
+        </h2>
+        <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+          {{ loadError() }}
+        </p>
+        <a routerLink="/studio" class="btn-secondary mt-6">Back to your studio</a>
+      </div>
+    } @else {
+      <div class="surface-card relative overflow-hidden">
+        <div
+          class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-700 via-brand-500 to-amber-300"
+        ></div>
+
+        <div class="p-5 sm:p-7">
+          <ol class="flex items-center gap-1.5">
+            @for (label of steps; track label; let index = $index) {
+              <li class="flex items-center gap-1.5" [class.flex-1]="index < steps.length - 1">
+                <span
+                  [class]="
+                    index === step()
+                      ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white'
+                      : index < step()
+                        ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-xs font-bold text-brand-700 dark:text-brand-300'
+                        : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-300/80 text-xs font-bold text-stone-500 dark:border-white/10 dark:text-stone-500'
+                  "
+                >
+                  {{ index + 1 }}
+                </span>
+                <span
+                  [class]="
+                    index === step()
+                      ? 'hidden text-xs font-bold uppercase tracking-[0.12em] text-ink-900 sm:inline dark:text-white'
+                      : 'hidden text-xs font-semibold uppercase tracking-[0.12em] text-stone-500 sm:inline dark:text-stone-500'
+                  "
+                >
+                  {{ label }}
+                </span>
+                @if (index < steps.length - 1) {
+                  <span
+                    [class]="
+                      index < step()
+                        ? 'h-px flex-1 bg-brand-500/40'
+                        : 'h-px flex-1 bg-stone-200 dark:bg-white/10'
+                    "
+                  ></span>
+                }
+              </li>
+            }
+          </ol>
+
+          <form class="mt-7" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            @if (pageError()) {
+              <div
+                class="mb-6 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+                role="alert"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.9"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                  class="mt-0.5 h-4 w-4 shrink-0"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7.5v5.5" />
+                  <path d="M12 16.5h.01" />
+                </svg>
+                <span>{{ pageError() }}</span>
+              </div>
+            }
+
+            @if (step() === 0) {
+              <div class="space-y-5">
+                <div>
+                  <label class="field-label" for="stationName">Station name</label>
+                  <input
+                    id="stationName"
+                    type="text"
+                    class="field-input"
+                    formControlName="name"
+                    maxlength="80"
+                    placeholder="Midnight Signals"
+                    autocomplete="off"
+                  />
+                  @if (fieldInvalid('name')) {
+                    <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                      Give the station a name of 2-80 characters.
+                    </p>
+                  }
+                </div>
+
+                <div>
+                  <label class="field-label" for="stationSlug">Slug</label>
+                  <div class="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      id="stationSlug"
+                      type="text"
+                      class="field-input font-mono text-sm"
+                      formControlName="slug"
+                      maxlength="60"
+                      placeholder="midnight-signals"
+                      autocomplete="off"
+                      (input)="onSlugInput($event)"
+                    />
+                    <button
+                      type="button"
+                      class="btn-secondary shrink-0 px-4 py-2.5 text-xs"
+                      (click)="useNameForSlug()"
+                    >
+                      Use name
+                    </button>
+                  </div>
+                  @if (fieldInvalid('slug')) {
+                    <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                      Use 3-60 lowercase letters, numbers and single hyphens.
+                    </p>
+                  } @else {
+                    <p class="mt-2 font-mono text-[0.68rem] text-stone-500 dark:text-stone-500">
+                      {{ slugPreview() }}
+                    </p>
+                  }
+                </div>
+
+                <div>
+                  <label class="field-label" for="stationDescription">Description</label>
+                  <textarea
+                    id="stationDescription"
+                    class="field-input min-h-28 resize-y"
+                    formControlName="description"
+                    maxlength="2000"
+                    placeholder="What does this station feel like? Who is it for, and what will listeners hear?"
+                  ></textarea>
+                  @if (fieldInvalid('description')) {
+                    <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                      Write at least 10 characters about the station.
+                    </p>
+                  }
+                </div>
+
+                <div class="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label class="field-label" for="stationLanguage">Language</label>
+                    <select
+                      id="stationLanguage"
+                      class="field-input"
+                      formControlName="language"
+                    >
+                      @for (language of languages; track language) {
+                        <option [value]="language">{{ language }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="field-label" for="stationRegion">
+                      Region <span class="font-normal text-stone-400">(optional)</span>
+                    </label>
+                    <input
+                      id="stationRegion"
+                      type="text"
+                      class="field-input"
+                      formControlName="region"
+                      maxlength="80"
+                      placeholder="Global, Latin America, Berlin…"
+                      autocomplete="off"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="field-label" for="stationTags">Tags &amp; topics</label>
+                  <input
+                    id="stationTags"
+                    type="text"
+                    class="field-input"
+                    formControlName="tagsText"
+                    placeholder="night drives, future cities, slow living"
+                    autocomplete="off"
+                  />
+                  <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">
+                    Separate topics with commas. These guide what the station talks about.
+                  </p>
+                  @if (fieldInvalid('tagsText')) {
+                    <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                      Add at least one tag or topic.
+                    </p>
+                  } @else if (tagPreview().length > 0) {
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                      @for (tag of tagPreview(); track tag) {
+                        <span class="chip chip--small">{{ tag }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else if (step() === 1) {
+              <div class="space-y-6">
+                <div>
+                  <label class="field-label">Musical genres</label>
+                  <p class="mb-3 text-xs text-stone-500 dark:text-stone-500">
+                    Pick the sounds that define this station. Select at least one.
+                  </p>
+                  <div class="flex flex-wrap gap-2">
+                    @for (genre of genres; track genre) {
+                      <button
+                        type="button"
+                        [class]="isGenreSelected(genre) ? 'chip chip--active' : 'chip'"
+                        (click)="toggleGenre(genre)"
+                      >
+                        @if (isGenreSelected(genre)) {
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.4"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            class="h-3 w-3"
+                          >
+                            <path d="m5 12 4.5 4.5L19 7" />
+                          </svg>
+                        }
+                        {{ genre }}
+                      </button>
+                    }
+                  </div>
+                  @if (fieldInvalid('genres')) {
+                    <p class="mt-3 text-xs font-medium text-red-600 dark:text-red-400">
+                      Choose at least one musical genre.
+                    </p>
+                  } @else if (genreLimitHit()) {
+                    <p class="mt-3 text-xs font-medium text-amber-700 dark:text-amber-300">
+                      You can choose up to 12 genres.
+                    </p>
+                  }
+                </div>
+
+                <div>
+                  <label class="field-label" for="presentationStyle">Presentation style</label>
+                  <select
+                    id="presentationStyle"
+                    class="field-input"
+                    formControlName="presentationStyle"
+                  >
+                    @for (style of presentationStyles; track style) {
+                      <option [value]="style">{{ style }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div>
+                  <label class="field-label" for="presentationNotes">
+                    Presentation preferences
+                  </label>
+                  <textarea
+                    id="presentationNotes"
+                    class="field-input min-h-32 resize-y"
+                    formControlName="presentationNotes"
+                    maxlength="2000"
+                    placeholder="Pacing, tone, segment ideas, words to avoid, how the host should sound…"
+                  ></textarea>
+                  <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">
+                    Private generation notes. These will guide the AI that writes and voices
+                    the station later.
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <div class="space-y-7">
+                <div>
+                  <label class="field-label" for="stationArtwork">
+                    Artwork <span class="font-normal text-stone-400">(optional)</span>
+                  </label>
+
+                  <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div
+                      class="relative aspect-square w-full max-w-[210px] overflow-hidden rounded-2xl border border-stone-300/80 bg-stone-100 dark:border-white/10 dark:bg-white/5"
+                    >
+                      @if (artworkPreview(); as preview) {
+                        <img
+                          [src]="preview"
+                          alt="Station artwork preview"
+                          class="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ink-950/75 text-white backdrop-blur transition-colors hover:bg-red-600"
+                          aria-label="Remove artwork"
+                          (click)="removeArtwork()"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            aria-hidden="true"
+                            class="h-4 w-4"
+                          >
+                            <path d="M6 6l12 12M18 6 6 18" />
+                          </svg>
+                        </button>
+                      } @else {
+                        <label
+                          for="stationArtwork"
+                          class="group/upload relative flex h-full min-h-44 cursor-pointer overflow-hidden"
+                        >
+                          <img
+                            [src]="defaultArtwork"
+                            alt=""
+                            class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover/upload:scale-[1.02]"
+                          />
+                          <span
+                            class="absolute left-2 top-2 rounded-full bg-ink-950/75 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.16em] text-white backdrop-blur"
+                          >
+                            Default
+                          </span>
+                          <span class="sr-only">Upload station artwork</span>
+                        </label>
+                      }
+                    </div>
+
+                    <div class="flex-1">
+                      <input
+                        id="stationArtwork"
+                        type="file"
+                        class="sr-only"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        (change)="onArtworkSelected($event)"
+                      />
+                      <label
+                        for="stationArtwork"
+                        class="btn-secondary cursor-pointer px-4 py-2.5 text-xs"
+                      >
+                        {{ artworkPreview() ? 'Replace image' : 'Upload image' }}
+                      </label>
+                      <p class="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-500">
+                        PNG, JPEG, WebP or GIF up to 2 MB. If you skip this, the default ETMW
+                        Radio AI artwork is used.
+                      </p>
+                      @if (artworkError()) {
+                        <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                          {{ artworkError() }}
+                        </p>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="field-label">Station status</label>
+                  <p class="mb-3 text-xs text-stone-500 dark:text-stone-500">
+                    Draft is the safest starting point. Only published stations appear on the
+                    public dashboard.
+                  </p>
+                  <div class="grid gap-2 sm:grid-cols-2">
+                    @for (status of statuses; track status) {
+                      <button
+                        type="button"
+                        [class]="
+                          form.controls.status.value === status
+                            ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 p-3 text-left ring-1 ring-brand-500/20'
+                            : 'rounded-2xl border border-stone-300/80 bg-white/50 p-3 text-left transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30'
+                        "
+                        (click)="setStatus(status)"
+                      >
+                        <span class="flex items-center justify-between gap-2">
+                          <span class="text-sm font-semibold text-ink-900 dark:text-white">
+                            {{ statusLabels[status] }}
+                          </span>
+                          @if (form.controls.status.value === status) {
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              class="h-4 w-4 text-brand-600 dark:text-brand-300"
+                            >
+                              <path d="m5 12 4.5 4.5L19 7" />
+                            </svg>
+                          }
+                        </span>
+                        <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+                          {{ statusDescriptions[status] }}
+                        </span>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div>
+                  <p class="field-label">Review</p>
+                  <dl
+                    class="grid gap-x-6 gap-y-4 rounded-2xl border border-stone-200/80 bg-white/40 p-4 text-sm dark:border-white/10 dark:bg-white/[0.03]"
+                  >
+                    <div class="sm:col-span-2">
+                      <dt class="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500">
+                        Station
+                      </dt>
+                      <dd class="mt-1 font-display text-lg font-semibold text-ink-900 dark:text-white">
+                        {{ form.controls.name.value || 'Untitled station' }}
+                      </dd>
+                      <dd class="mt-1 font-mono text-[0.68rem] text-stone-500 dark:text-stone-500">
+                        /{{ form.controls.slug.value || 'your-station' }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500">
+                        Language
+                      </dt>
+                      <dd class="mt-1 font-semibold text-ink-900 dark:text-stone-200">
+                        {{ form.controls.language.value }}
+                        @if (form.controls.region.value) {
+                          · {{ form.controls.region.value }}
+                        }
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500">
+                        Presentation
+                      </dt>
+                      <dd class="mt-1 font-semibold text-ink-900 dark:text-stone-200">
+                        {{ form.controls.presentationStyle.value }}
+                      </dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                      <dt class="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500">
+                        Genres
+                      </dt>
+                      <dd class="mt-1 flex flex-wrap gap-1.5">
+                        @for (genre of form.controls.genres.value; track genre) {
+                          <span class="chip chip--small">{{ genre }}</span>
+                        }
+                      </dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                      <dt class="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500">
+                        Topics
+                      </dt>
+                      <dd class="mt-1 flex flex-wrap gap-1.5">
+                        @for (tag of tagPreview(); track tag) {
+                          <span class="chip chip--small">{{ tag }}</span>
+                        }
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            }
+
+            <div
+              class="mt-8 flex flex-col gap-3 border-t border-stone-200/80 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/5"
+            >
+              @if (step() === 0) {
+                <a routerLink="/studio" class="btn-secondary">Cancel</a>
+              } @else {
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  [disabled]="saving()"
+                  (click)="previousStep()"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="h-4 w-4"
+                  >
+                    <path d="M19 12H5" />
+                    <path d="m11 18-6-6 6-6" />
+                  </svg>
+                  Back
+                </button>
+              }
+
+              @if (step() < steps.length - 1) {
+                <button type="button" class="btn-primary" (click)="nextStep()">
+                  Continue
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="h-4 w-4"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
+                </button>
+              } @else {
+                <button type="submit" class="btn-primary" [disabled]="saving()">
+                  @if (saving()) {
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                      class="h-4 w-4 animate-spin"
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" />
+                    </svg>
+                    Saving…
+                  } @else {
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.9"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      class="h-4 w-4"
+                    >
+                      <path d="M12 3 4.5 6v5.5c0 4.4 3.1 8.4 7.5 9.5 4.4-1.1 7.5-5.1 7.5-9.5V6Z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    {{ editing() ? 'Save changes' : 'Create station' }}
+                  }
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  </div>
+</section>

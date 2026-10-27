@@ -1,0 +1,291 @@
+<section class="app-container pb-16 pt-10 sm:pt-16 lg:pb-24 lg:pt-20">
+  <div class="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+    <div class="max-w-xl">
+      <span
+        class="inline-flex items-center gap-2 rounded-full border border-brand-500/25 bg-brand-500/10 px-3.5 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-brand-700 dark:border-brand-500/20 dark:text-brand-300"
+      >
+        <span class="live-dot h-1.5 w-1.5 rounded-full bg-signal-500"></span>
+        AI generated · always on
+      </span>
+
+      <h1
+        class="mt-6 font-display text-[2.6rem] font-semibold leading-[1.04] tracking-tight text-ink-900 sm:text-6xl lg:text-[4.15rem] dark:text-white"
+      >
+        A radio station that
+        <span
+          class="bg-gradient-to-r from-brand-600 via-brand-500 to-amber-400 bg-clip-text text-transparent dark:from-brand-400 dark:via-brand-500 dark:to-amber-300"
+        >
+          writes itself.
+        </span>
+      </h1>
+
+      <p class="mt-6 text-base leading-relaxed text-stone-600 sm:text-lg dark:text-stone-400">
+        ETMW Radio AI blends music, stories and conversation into a live broadcast that is
+        shaped in real time. No playlists on repeat — every hour is written as it airs.
+      </p>
+
+      <div
+        class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-500"
+      >
+        <span class="flex items-center gap-2">
+          <span class="h-1 w-1 rounded-full bg-brand-500"></span>
+          Music
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="h-1 w-1 rounded-full bg-brand-500"></span>
+          Stories
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="h-1 w-1 rounded-full bg-brand-500"></span>
+          Live conversation
+        </span>
+      </div>
+    </div>
+
+    <div class="relative">
+      <div
+        aria-hidden="true"
+        class="absolute -inset-4 -z-10 rounded-[2.25rem] bg-gradient-to-br from-brand-500/20 via-amber-400/10 to-transparent blur-2xl"
+      ></div>
+
+      <div class="surface-card relative overflow-hidden p-5 sm:p-7">
+        <div
+          class="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-brand-500/15 blur-3xl"
+        ></div>
+
+        <div class="relative flex items-center justify-between gap-3">
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-signal-500/25 bg-signal-500/10 px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-emerald-700 dark:text-signal-400"
+          >
+            <span class="live-dot h-1.5 w-1.5 rounded-full bg-signal-500"></span>
+            On air soon
+          </span>
+
+          <span class="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-stone-500 dark:text-stone-500">
+            102.4 · AI
+          </span>
+        </div>
+
+        <div class="relative mt-9">
+          <p class="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-stone-500 dark:text-stone-500">
+            Now playing
+          </p>
+          <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 sm:text-[1.7rem] dark:text-white">
+            The first transmission
+          </h2>
+          <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">
+            Written, voiced and mixed by ETMW Radio AI
+          </p>
+        </div>
+
+        <div class="relative mt-9 flex h-28 items-end gap-[0.3rem] sm:gap-1.5" aria-hidden="true">
+          @for (bar of bars; track $index) {
+            <span
+              class="eq-bar w-full flex-1 rounded-full bg-gradient-to-t from-brand-700 via-brand-500 to-amber-300 opacity-80 dark:from-brand-600 dark:via-brand-400 dark:to-amber-200"
+              [style.height.%]="bar"
+              [style.animation-delay.ms]="$index * 75 + 100"
+            ></span>
+          }
+        </div>
+
+        <div
+          class="relative mt-7 flex items-center justify-between gap-3 border-t border-stone-200/80 pt-5 text-[0.68rem] font-semibold text-stone-500 dark:border-white/5 dark:text-stone-500"
+        >
+          <span class="flex items-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              class="h-3.5 w-3.5 text-brand-600 dark:text-brand-400"
+              aria-hidden="true"
+            >
+              <path d="M4 18v-6a8 8 0 0 1 16 0v6" />
+              <rect x="2.5" y="14" width="4" height="6" rx="1.4" />
+              <rect x="17.5" y="14" width="4" height="6" rx="1.4" />
+            </svg>
+            Autonomous studio
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-signal-500"></span>
+            24 / 7 signal
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stations" class="app-container pb-20 sm:pb-24">
+  <div
+    class="flex flex-wrap items-end justify-between gap-4 border-t border-stone-200/70 pt-10 dark:border-white/5"
+  >
+    <div>
+      <p class="eyebrow">On the dial</p>
+      <h2
+        class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl dark:text-white"
+      >
+        Published stations
+      </h2>
+      <p class="mt-2 max-w-xl text-sm text-stone-500 dark:text-stone-400">
+        Stations the community has put on air. Anyone can listen in — no account needed.
+      </p>
+    </div>
+
+    @if (isAuthenticated()) {
+      <a routerLink="/studio" class="btn-secondary">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="h-4 w-4"
+        >
+          <path d="M4 18v-6a8 8 0 0 1 16 0v6" />
+          <rect x="2.5" y="14" width="4" height="6" rx="1.4" />
+          <rect x="17.5" y="14" width="4" height="6" rx="1.4" />
+        </svg>
+        Open your studio
+      </a>
+    } @else {
+      <a routerLink="/profile" class="btn-secondary">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="h-4 w-4"
+        >
+          <path d="M15 3h3.4c.9 0 1.6.7 1.6 1.6v14.8c0 .9-.7 1.6-1.6 1.6H15" />
+          <path d="M10 17l5-5-5-5" />
+          <path d="M15 12H3" />
+        </svg>
+        Sign in to create a station
+      </a>
+    }
+  </div>
+
+  @if (loadingStations()) {
+    <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+        <div class="surface-card overflow-hidden">
+          <div class="aspect-[16/10] animate-pulse bg-stone-200/70 dark:bg-white/5"></div>
+          <div class="space-y-3 p-4">
+            <div class="h-3 w-24 animate-pulse rounded-full bg-stone-200/80 dark:bg-white/5"></div>
+            <div class="h-5 w-3/4 animate-pulse rounded-full bg-stone-200/80 dark:bg-white/5"></div>
+            <div class="h-3 w-full animate-pulse rounded-full bg-stone-200/60 dark:bg-white/[0.04]"></div>
+            <div class="h-3 w-2/3 animate-pulse rounded-full bg-stone-200/60 dark:bg-white/[0.04]"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (stationsError()) {
+    <div class="surface-card mt-7 flex flex-col items-center gap-4 p-8 text-center">
+      <p class="text-sm text-stone-500 dark:text-stone-400">{{ stationsError() }}</p>
+      <button type="button" class="btn-secondary" (click)="loadStations()">
+        Try again
+      </button>
+    </div>
+  } @else if (stations().length === 0) {
+    <div class="surface-card mt-7 flex flex-col items-center px-6 py-12 text-center">
+      <span
+        class="flex h-14 w-14 items-center justify-center rounded-3xl border border-brand-500/25 bg-brand-500/10 text-brand-600 dark:text-brand-300"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="h-6 w-6"
+        >
+          <path d="M4 18v-6a8 8 0 0 1 16 0v6" />
+          <rect x="2.5" y="14" width="4" height="6" rx="1.4" />
+          <rect x="17.5" y="14" width="4" height="6" rx="1.4" />
+        </svg>
+      </span>
+      <h3 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">
+        The airwaves are quiet
+      </h3>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+        No station has been published yet. Be the first to put an AI radio station on the dial.
+      </p>
+      @if (isAuthenticated()) {
+        <a routerLink="/studio/new" class="btn-primary mt-6">Create the first station</a>
+      } @else {
+        <a routerLink="/profile" class="btn-primary mt-6">Sign in to create a station</a>
+      }
+    </div>
+  } @else {
+    <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (station of stations(); track station.id) {
+        <a
+          [routerLink]="['/stations', station.slug]"
+          class="surface-card group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-brand-400/50 hover:shadow-2xl dark:hover:border-brand-500/30"
+        >
+          <div class="relative aspect-[16/10] overflow-hidden">
+            @if (artworkUrl(station); as artwork) {
+              <img
+                [src]="artwork"
+                [alt]="station.name + ' artwork'"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                loading="lazy"
+              />
+            } @else {
+              <img
+                [src]="defaultArtwork"
+                alt=""
+                class="h-full w-full bg-ink-950 object-contain"
+                loading="lazy"
+              />
+            }
+            <span class="status-pill status-pill--published absolute left-3 top-3 backdrop-blur-md">
+              <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+              Published
+            </span>
+          </div>
+
+          <div class="flex flex-1 flex-col p-4 sm:p-5">
+            <div
+              class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500"
+            >
+              <span>{{ station.language }}</span>
+              @if (station.region) {
+                <span aria-hidden="true">·</span>
+                <span>{{ station.region }}</span>
+              }
+            </div>
+
+            <h3
+              class="mt-2 font-display text-lg font-semibold tracking-tight text-ink-900 transition-colors group-hover:text-brand-700 dark:text-white dark:group-hover:text-brand-300"
+            >
+              {{ station.name }}
+            </h3>
+
+            <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+              {{ station.description }}
+            </p>
+
+            <div class="mt-auto flex flex-wrap gap-1.5 pt-4">
+              @for (genre of station.genres.slice(0, 3); track genre) {
+                <span class="chip chip--small">{{ genre }}</span>
+              }
+              @if (station.genres.length > 3) {
+                <span class="chip chip--small">+{{ station.genres.length - 3 }}</span>
+              }
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</section>
