@@ -3,6 +3,40 @@ import { RadioStation } from './station.models';
 export type HostGender = 'male' | 'female';
 export type HostSkill = string;
 export type HostAvatarSource = 'upload' | 'ai';
+export type HostVoiceEmotion =
+  'calm' | 'mysterious' | 'happy' | 'sad' | 'energetic' | 'serious' | 'warm';
+
+export interface HostVoiceOption {
+  id: string;
+  name: string;
+  gender: HostGender;
+  locale: string;
+  age: string;
+  description: string;
+}
+
+export interface HostVoiceEmotionOption {
+  id: HostVoiceEmotion;
+  label: string;
+  description: string;
+}
+
+export interface HostVoiceCatalogResponse {
+  voices: HostVoiceOption[];
+  emotions: HostVoiceEmotionOption[];
+}
+
+export interface HostVoiceAssignment {
+  id: string;
+  name: string;
+  emotion: HostVoiceEmotion;
+  assignedAt: string;
+}
+
+export interface HostVoicePayload {
+  voiceId: string;
+  emotion: HostVoiceEmotion;
+}
 
 export interface HostPersona {
   id: string;
@@ -12,6 +46,7 @@ export interface HostPersona {
   skills: HostSkill[];
   avatarUrl: string | null;
   avatarSource: HostAvatarSource | null;
+  voice: HostVoiceAssignment | null;
   createdAt: string;
   updatedAt: string;
 }

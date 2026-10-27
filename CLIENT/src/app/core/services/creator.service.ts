@@ -14,20 +14,16 @@ import {
   HostPayload,
   HostPersona,
   HostResponse,
+  HostVoiceCatalogResponse,
+  HostVoicePayload,
 } from '../models/host.models';
 
 @Injectable({ providedIn: 'root' })
 export class CreatorService {
   private readonly http = inject(HttpClient);
 
-  getDashboard(
-    slug: string,
-    page: number,
-    pageSize: number,
-  ): Observable<CreatorDashboardResponse> {
-    const params = new HttpParams()
-      .set('page', page)
-      .set('pageSize', pageSize);
+  getDashboard(slug: string, page: number, pageSize: number): Observable<CreatorDashboardResponse> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
 
     return this.http.get<CreatorDashboardResponse>(
       `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}`,
@@ -45,17 +41,13 @@ export class CreatorService {
     );
   }
 
-
   getHosts(slug: string): Observable<HostListResponse> {
     return this.http.get<HostListResponse>(
       `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts`,
     );
   }
 
-  createHost(
-    slug: string,
-    payload: HostPayload,
-  ): Observable<HostResponse> {
+  createHost(slug: string, payload: HostPayload): Observable<HostResponse> {
     return this.http.post<HostResponse>(
       `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts`,
       payload,
@@ -86,6 +78,35 @@ export class CreatorService {
     return this.http.post<GenerateHostAvatarResponse>(
       `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/avatar/generate`,
       payload,
+    );
+  }
+
+  getVoiceCatalog(): Observable<HostVoiceCatalogResponse> {
+    return this.http.get<HostVoiceCatalogResponse>(`${API_BASE_URL}/creator/voice-catalog`);
+  }
+
+  assignHostVoice(
+    slug: string,
+    hostId: string,
+    payload: HostVoicePayload,
+  ): Observable<HostResponse> {
+    return this.http.patch<HostResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}/voice`,
+      payload,
+    );
+  }
+
+  removeHostVoice(slug: string, hostId: string): Observable<HostResponse> {
+    return this.http.delete<HostResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}/voice`,
+    );
+  }
+
+  previewHostVoice(slug: string, hostId: string, payload: HostVoicePayload): Observable<Blob> {
+    return this.http.post(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}/voice/preview`,
+      payload,
+      { responseType: 'blob' },
     );
   }
 

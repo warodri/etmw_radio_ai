@@ -1,11 +1,37 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId } from "mongodb";
 
-export const HOST_GENDERS = ['male', 'female'] as const;
+export const HOST_GENDERS = ["male", "female"] as const;
 export type HostGender = (typeof HOST_GENDERS)[number];
 
 export type HostSkill = string;
 
-export const HOST_AVATAR_SOURCES = ['upload', 'ai'] as const;
+export const HOST_VOICE_EMOTIONS = [
+  "calm",
+  "mysterious",
+  "happy",
+  "sad",
+  "energetic",
+  "serious",
+  "warm",
+] as const;
+
+export type HostVoiceEmotion = (typeof HOST_VOICE_EMOTIONS)[number];
+
+export interface HostVoiceAssignment {
+  id: string;
+  name: string;
+  emotion: HostVoiceEmotion;
+  assignedAt: Date;
+}
+
+export interface HostVoiceView {
+  id: string;
+  name: string;
+  emotion: HostVoiceEmotion;
+  assignedAt: string;
+}
+
+export const HOST_AVATAR_SOURCES = ["upload", "ai"] as const;
 export type HostAvatarSource = (typeof HOST_AVATAR_SOURCES)[number];
 
 export interface HostAvatar {
@@ -23,6 +49,7 @@ export interface HostDocument {
   skills: HostSkill[];
   avatar: HostAvatar | null;
   avatarSource: HostAvatarSource | null;
+  voice: HostVoiceAssignment | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,13 +62,12 @@ export interface HostView {
   skills: HostSkill[];
   avatarUrl: string | null;
   avatarSource: HostAvatarSource | null;
+  voice: HostVoiceView | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export function toHostView(
-  host: HostDocument & { _id: ObjectId },
-): HostView {
+export function toHostView(host: HostDocument & { _id: ObjectId }): HostView {
   const id = host._id.toHexString();
   const hasAvatar = Boolean(host.avatar?.mimeType);
 
@@ -55,6 +81,14 @@ export function toHostView(
       ? `/hosts/${id}/avatar?v=${host.updatedAt.getTime()}`
       : null,
     avatarSource: host.avatarSource,
+    voice: host.voice
+      ? {
+          id: host.voice.id,
+          name: host.voice.name,
+          emotion: host.voice.emotion,
+          assignedAt: host.voice.assignedAt.toISOString(),
+        }
+      : null,
     createdAt: host.createdAt.toISOString(),
     updatedAt: host.updatedAt.toISOString(),
   };

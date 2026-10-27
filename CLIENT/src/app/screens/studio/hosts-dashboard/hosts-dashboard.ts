@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
@@ -6,14 +6,14 @@ import {
   HostGender,
   HostPersona,
   HostSkill,
+  HostVoiceCatalogResponse,
+  HostVoiceEmotion,
+  HostVoiceOption,
 } from '../../../core/models/host.models';
 import { RadioStation } from '../../../core/models/station.models';
 import { apiErrorMessage } from '../../../core/services/auth.service';
 import { CreatorService } from '../../../core/services/creator.service';
-import {
-  DEFAULT_STATION_ARTWORK,
-  StationService,
-} from '../../../core/services/station.service';
+import { DEFAULT_STATION_ARTWORK, StationService } from '../../../core/services/station.service';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -24,7 +24,7 @@ const ALLOWED_AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gi
   templateUrl: './hosts-dashboard.html',
   styleUrl: './hosts-dashboard.scss',
 })
-export class HostsDashboard implements OnInit {
+export class HostsDashboard implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly creator = inject(CreatorService);
@@ -53,23 +53,63 @@ export class HostsDashboard implements OnInit {
   protected readonly removeAvatar = signal(false);
   protected readonly skillDraft = signal('');
 
+  protected readonly voiceHost = signal<HostPersona | null>(null);
+  protected readonly voiceCatalog = signal<HostVoiceCatalogResponse | null>(null);
+  protected readonly voiceCatalogLoading = signal(false);
+  protected readonly selectedVoiceId = signal<string | null>(null);
+  protected readonly selectedEmotion = signal<HostVoiceEmotion>('calm');
+  protected readonly previewLoading = signal(false);
+  protected readonly previewPlaying = signal(false);
+  protected readonly voiceSaving = signal(false);
+  protected readonly voiceError = signal<string | null>(null);
+
+  private readonly previewAudio = new Audio();
+  private previewUrl: string | null = null;
+
   protected readonly editing = computed(() => this.editingId() !== null);
   protected readonly formTitle = computed(() =>
     this.editing() ? 'Edit host persona' : 'Create a host persona',
   );
 
+  protected readonly voicePanelOpen = computed(() => this.voiceHost() !== null);
+  protected readonly availableVoices = computed(() => {
+    const host = this.voiceHost();
+    const catalog = this.voiceCatalog();
+
+    if (!host || !catalog) {
+      return [];
+    }
+
+    return catalog.voices.filter((voice) => voice.gender === host.gender);
+  });
+  protected readonly emotionOptions = computed(() => this.voiceCatalog()?.emotions ?? []);
+  protected readonly selectedVoice = computed(
+    () => this.availableVoices().find((voice) => voice.id === this.selectedVoiceId()) ?? null,
+  );
+
   protected readonly form = this.fb.nonNullable.group({
-    name: [
-      '',
-      [Validators.required, Validators.minLength(2), Validators.maxLength(80)],
-    ],
+    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
     gender: this.fb.nonNullable.control<HostGender>('female'),
-    personality: [
-      '',
-      [Validators.required, Validators.minLength(10), Validators.maxLength(4000)],
-    ],
+    personality: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(4000)]],
     skills: this.fb.nonNullable.control<HostSkill[]>([]),
   });
+
+  constructor() {
+    this.previewAudio.preload = 'auto';
+    this.previewAudio.addEventListener('play', () => this.previewPlaying.set(true));
+    this.previewAudio.addEventListener('pause', () => this.previewPlaying.set(false));
+    this.previewAudio.addEventListener('ended', () => this.stopPreview());
+    this.previewAudio.addEventListener('error', () => {
+      if (this.previewPlaying()) {
+        this.voiceError.set('This voice preview could not be played.');
+      }
+      this.stopPreview();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.stopPreview();
+  }
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
@@ -123,6 +163,7 @@ export class HostsDashboard implements OnInit {
   }
 
   protected openCreate(): void {
+    this.closeVoice();
     this.form.reset({ name: '', gender: 'female', personality: '', skills: [] });
     this.editingId.set(null);
     this.formError.set(null);
@@ -134,6 +175,7 @@ export class HostsDashboard implements OnInit {
   }
 
   protected openEdit(host: HostPersona): void {
+    this.closeVoice();
     this.form.reset({
       name: host.name,
       gender: host.gender,
@@ -357,12 +399,14 @@ export class HostsDashboard implements OnInit {
   }
 
   protected remove(host: HostPersona): void {
-    const confirmed = window.confirm(
-      `Delete "${host.name}"? This cannot be undone.`,
-    );
+    const confirmed = window.confirm(`Delete "${host.name}"? This cannot be undone.`);
 
     if (!confirmed) {
       return;
+    }
+
+    if (this.voiceHost()?.id === host.id) {
+      this.closeVoice();
     }
 
     this.deletingId.set(host.id);
@@ -371,9 +415,7 @@ export class HostsDashboard implements OnInit {
 
     this.creator.deleteHost(this.slug, host.id).subscribe({
       next: () => {
-        this.hosts.update((hosts) =>
-          hosts.filter((item) => item.id !== host.id),
-        );
+        this.hosts.update((hosts) => hosts.filter((item) => item.id !== host.id));
         this.deletingId.set(null);
         this.notice.set(`"${host.name}" was deleted.`);
       },
@@ -382,6 +424,197 @@ export class HostsDashboard implements OnInit {
         this.pageError.set(apiErrorMessage(error));
       },
     });
+  }
+
+  protected openVoice(host: HostPersona): void {
+    this.closeForm();
+    this.notice.set(null);
+    this.voiceError.set(null);
+    this.voiceHost.set(host);
+    this.selectedEmotion.set(host.voice?.emotion ?? 'calm');
+    this.selectedVoiceId.set(host.voice?.id ?? null);
+    this.stopPreview();
+
+    if (this.voiceCatalog()) {
+      this.ensureSelectedVoice();
+    } else {
+      this.loadVoiceCatalog();
+    }
+
+    setTimeout(() => {
+      document.getElementById('voice-panel')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 0);
+  }
+
+  protected closeVoice(): void {
+    this.stopPreview();
+    this.voiceHost.set(null);
+    this.voiceError.set(null);
+    this.previewLoading.set(false);
+  }
+
+  protected loadVoiceCatalog(): void {
+    this.voiceCatalogLoading.set(true);
+    this.voiceError.set(null);
+
+    this.creator.getVoiceCatalog().subscribe({
+      next: (catalog) => {
+        this.voiceCatalog.set(catalog);
+        this.voiceCatalogLoading.set(false);
+        this.ensureSelectedVoice();
+      },
+      error: (error: unknown) => {
+        this.voiceCatalogLoading.set(false);
+        this.voiceError.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  protected selectVoice(voice: HostVoiceOption): void {
+    this.selectedVoiceId.set(voice.id);
+    this.stopPreview();
+    this.voiceError.set(null);
+  }
+
+  protected selectEmotion(emotion: HostVoiceEmotion): void {
+    this.selectedEmotion.set(emotion);
+    this.stopPreview();
+    this.voiceError.set(null);
+  }
+
+  protected togglePreview(): void {
+    if (this.previewPlaying()) {
+      this.stopPreview();
+      return;
+    }
+
+    const host = this.voiceHost();
+    const voice = this.selectedVoice();
+
+    if (!host || !voice) {
+      this.voiceError.set('Choose a voice first.');
+      return;
+    }
+
+    this.stopPreview();
+    this.previewLoading.set(true);
+    this.voiceError.set(null);
+
+    this.creator
+      .previewHostVoice(this.slug, host.id, {
+        voiceId: voice.id,
+        emotion: this.selectedEmotion(),
+      })
+      .subscribe({
+        next: (blob) => {
+          this.previewUrl = URL.createObjectURL(blob);
+          this.previewAudio.src = this.previewUrl;
+          this.previewAudio.load();
+          this.previewAudio
+            .play()
+            .catch(() => {
+              this.voiceError.set('Your browser blocked playback. Press play again.');
+              this.previewPlaying.set(false);
+            })
+            .finally(() => this.previewLoading.set(false));
+        },
+        error: (error: unknown) => {
+          this.previewLoading.set(false);
+          this.voiceError.set(apiErrorMessage(error));
+        },
+      });
+  }
+
+  protected assignSelectedVoice(): void {
+    const host = this.voiceHost();
+    const voice = this.selectedVoice();
+
+    if (!host || !voice) {
+      this.voiceError.set('Choose a voice first.');
+      return;
+    }
+
+    this.voiceSaving.set(true);
+    this.voiceError.set(null);
+
+    this.creator
+      .assignHostVoice(this.slug, host.id, {
+        voiceId: voice.id,
+        emotion: this.selectedEmotion(),
+      })
+      .subscribe({
+        next: (response) => {
+          this.voiceSaving.set(false);
+          this.hosts.update((hosts) =>
+            hosts.map((item) => (item.id === response.host.id ? response.host : item)),
+          );
+          this.notice.set(`${voice.name} is now the voice of ${response.host.name}.`);
+          this.closeVoice();
+        },
+        error: (error: unknown) => {
+          this.voiceSaving.set(false);
+          this.voiceError.set(apiErrorMessage(error));
+        },
+      });
+  }
+
+  protected removeSelectedVoice(): void {
+    const host = this.voiceHost();
+
+    if (!host?.voice) {
+      return;
+    }
+
+    this.voiceSaving.set(true);
+    this.voiceError.set(null);
+
+    this.creator.removeHostVoice(this.slug, host.id).subscribe({
+      next: (response) => {
+        this.voiceSaving.set(false);
+        this.hosts.update((hosts) =>
+          hosts.map((item) => (item.id === response.host.id ? response.host : item)),
+        );
+        this.notice.set(`The voice was removed from ${response.host.name}.`);
+        this.closeVoice();
+      },
+      error: (error: unknown) => {
+        this.voiceSaving.set(false);
+        this.voiceError.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  protected emotionLabel(emotion: HostVoiceEmotion): string {
+    return (
+      this.emotionOptions().find((option) => option.id === emotion)?.label ??
+      emotion.charAt(0).toUpperCase() + emotion.slice(1)
+    );
+  }
+
+  private ensureSelectedVoice(): void {
+    const voices = this.availableVoices();
+    const current = this.selectedVoiceId();
+
+    if (!current || !voices.some((voice) => voice.id === current)) {
+      this.selectedVoiceId.set(voices[0]?.id ?? null);
+    }
+  }
+
+  private stopPreview(): void {
+    this.previewAudio.pause();
+    this.previewAudio.removeAttribute('src');
+    this.previewAudio.load();
+
+    if (this.previewUrl) {
+      URL.revokeObjectURL(this.previewUrl);
+      this.previewUrl = null;
+    }
+
+    this.previewPlaying.set(false);
+    this.previewLoading.set(false);
   }
 
   private addSkillValues(values: string[]): void {

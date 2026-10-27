@@ -1,23 +1,31 @@
-import { ObjectId } from 'mongodb';
-import { ApiError } from '../../utils/errors.js';
-import { openAiImage } from '../../services/openai-image.service.js';
-import {
-  HostDocument,
-  HostView,
-  toHostView,
-} from './host.model.js';
-import { HostRepository } from './host.repository.js';
+import { ObjectId } from "mongodb";
+import { ApiError } from "../../utils/errors.js";
+import { openAiImage } from "../../services/openai-image.service.js";
+import { HostDocument, HostView, toHostView } from "./host.model.js";
+import { HostRepository } from "./host.repository.js";
 import {
   CreateHostInput,
   GenerateHostAvatarInput,
+  HostVoiceInput,
   parseHostAvatarDataUrl,
   UpdateHostInput,
-} from './host.validation.js';
-import { StationService } from '../stations/station.service.js';
+} from "./host.validation.js";
+import { StationService } from "../stations/station.service.js";
+import {
+  findVoice,
+  HOST_VOICE_CATALOG,
+  HOST_VOICE_EMOTION_OPTIONS,
+  HostVoiceEmotionOption,
+  HostVoiceOption,
+} from "./voice-catalog.js";
+import { phonon } from "../../services/phonon.service.js";
 
-function toObjectId(value: string, message = 'That host does not exist.'): ObjectId {
+function toObjectId(
+  value: string,
+  message = "That host does not exist.",
+): ObjectId {
   if (!ObjectId.isValid(value)) {
-    throw new ApiError(404, 'HOST_NOT_FOUND', message);
+    throw new ApiError(404, "HOST_NOT_FOUND", message);
   }
 
   return new ObjectId(value);
@@ -55,10 +63,13 @@ export class HostService {
   async list(
     ownerIdInput: string,
     slugInput: string,
-  ): Promise<{ station: Awaited<ReturnType<StationService['getOwnedBySlug']>>; hosts: HostView[] }> {
+  ): Promise<{
+    station: Awaited<ReturnType<StationService["getOwnedBySlug"]>>;
+    hosts: HostView[];
+  }> {
     const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
-    const stationId = toObjectId(station.id, 'That station does not exist.');
-    const ownerId = toObjectId(ownerIdInput, 'Authentication is required.');
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
     const hosts = await this.hosts.listByStation(stationId, ownerId);
 
     return {
@@ -73,8 +84,8 @@ export class HostService {
     input: CreateHostInput,
   ): Promise<{ host: HostView }> {
     const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
-    const stationId = toObjectId(station.id, 'That station does not exist.');
-    const ownerId = toObjectId(ownerIdInput, 'Authentication is required.');
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
     const avatar = parseHostAvatarDataUrl(input.avatarDataUrl);
     const now = new Date();
 
@@ -86,7 +97,8 @@ export class HostService {
       personality: input.personality.trim(),
       skills: normalizeSkills(input.skills),
       avatar: avatar ?? null,
-      avatarSource: avatar ? input.avatarSource ?? 'upload' : null,
+      avatarSource: avatar ? (input.avatarSource ?? "upload") : null,
+      voice: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -103,13 +115,13 @@ export class HostService {
     input: UpdateHostInput,
   ): Promise<{ host: HostView }> {
     const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
-    const stationId = toObjectId(station.id, 'That station does not exist.');
-    const ownerId = toObjectId(ownerIdInput, 'Authentication is required.');
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
     const hostId = toObjectId(hostIdInput);
     const existing = await this.hosts.findOwned(hostId, stationId, ownerId);
 
     if (!existing) {
-      throw new ApiError(404, 'HOST_NOT_FOUND', 'That host does not exist.');
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
     }
 
     const fields: Partial<HostDocument> = { updatedAt: new Date() };
@@ -130,16 +142,21 @@ export class HostService {
     if (input.avatarDataUrl !== undefined) {
       const avatar = parseHostAvatarDataUrl(input.avatarDataUrl);
       fields.avatar = avatar;
-      fields.avatarSource = avatar ? input.avatarSource ?? 'upload' : null;
+      fields.avatarSource = avatar ? (input.avatarSource ?? "upload") : null;
     } else if (input.removeAvatar === true) {
       fields.avatar = null;
       fields.avatarSource = null;
     }
 
-    const updated = await this.hosts.updateOwned(hostId, stationId, ownerId, fields);
+    const updated = await this.hosts.updateOwned(
+      hostId,
+      stationId,
+      ownerId,
+      fields,
+    );
 
     if (!updated) {
-      throw new ApiError(404, 'HOST_NOT_FOUND', 'That host does not exist.');
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
     }
 
     return { host: toHostView(updated) };
@@ -151,13 +168,13 @@ export class HostService {
     hostIdInput: string,
   ): Promise<void> {
     const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
-    const stationId = toObjectId(station.id, 'That station does not exist.');
-    const ownerId = toObjectId(ownerIdInput, 'Authentication is required.');
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
     const hostId = toObjectId(hostIdInput);
     const deleted = await this.hosts.deleteOwned(hostId, stationId, ownerId);
 
     if (!deleted) {
-      throw new ApiError(404, 'HOST_NOT_FOUND', 'That host does not exist.');
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
     }
   }
 
@@ -165,14 +182,116 @@ export class HostService {
     ownerIdInput: string,
     slugInput: string,
     input: GenerateHostAvatarInput,
-  ): Promise<{ avatarDataUrl: string; source: 'ai' }> {
+  ): Promise<{ avatarDataUrl: string; source: "ai" }> {
     await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
     const generated = await openAiImage.generateHostAvatar(input);
 
     return {
-      avatarDataUrl: `data:${generated.mimeType};base64,${generated.data.toString('base64')}`,
-      source: 'ai',
+      avatarDataUrl: `data:${generated.mimeType};base64,${generated.data.toString("base64")}`,
+      source: "ai",
     };
+  }
+
+  voiceCatalog(): {
+    voices: HostVoiceOption[];
+    emotions: HostVoiceEmotionOption[];
+  } {
+    return {
+      voices: HOST_VOICE_CATALOG,
+      emotions: HOST_VOICE_EMOTION_OPTIONS,
+    };
+  }
+
+  async assignVoice(
+    ownerIdInput: string,
+    slugInput: string,
+    hostIdInput: string,
+    input: HostVoiceInput,
+  ): Promise<{ host: HostView }> {
+    const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
+    const hostId = toObjectId(hostIdInput);
+    const host = await this.hosts.findOwned(hostId, stationId, ownerId);
+
+    if (!host) {
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
+    }
+
+    const voice = this.voiceForHost(input.voiceId, host.gender);
+    const updated = await this.hosts.updateOwned(hostId, stationId, ownerId, {
+      voice: {
+        id: voice.id,
+        name: voice.name,
+        emotion: input.emotion,
+        assignedAt: new Date(),
+      },
+      updatedAt: new Date(),
+    });
+
+    if (!updated) {
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
+    }
+
+    return { host: toHostView(updated) };
+  }
+
+  async removeVoice(
+    ownerIdInput: string,
+    slugInput: string,
+    hostIdInput: string,
+  ): Promise<{ host: HostView }> {
+    const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
+    const hostId = toObjectId(hostIdInput);
+    const updated = await this.hosts.updateOwned(hostId, stationId, ownerId, {
+      voice: null,
+      updatedAt: new Date(),
+    });
+
+    if (!updated) {
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
+    }
+
+    return { host: toHostView(updated) };
+  }
+
+  async previewVoice(
+    ownerIdInput: string,
+    slugInput: string,
+    hostIdInput: string,
+    input: HostVoiceInput,
+  ): Promise<{ data: Buffer; contentType: string }> {
+    const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
+    const stationId = toObjectId(station.id, "That station does not exist.");
+    const ownerId = toObjectId(ownerIdInput, "Authentication is required.");
+    const hostId = toObjectId(hostIdInput);
+    const host = await this.hosts.findOwned(hostId, stationId, ownerId);
+
+    if (!host) {
+      throw new ApiError(404, "HOST_NOT_FOUND", "That host does not exist.");
+    }
+
+    const voice = this.voiceForHost(input.voiceId, host.gender);
+    return phonon.preview(host.name, voice.name, input.emotion);
+  }
+
+  private voiceForHost(
+    voiceId: string,
+    gender: HostDocument["gender"],
+  ): HostVoiceOption {
+    const voice = findVoice(voiceId);
+
+    if (!voice || voice.gender !== gender) {
+      throw new ApiError(
+        400,
+        "VOICE_NOT_AVAILABLE",
+        "That voice is not available for this host.",
+      );
+    }
+
+    return voice;
   }
 
   async avatar(
