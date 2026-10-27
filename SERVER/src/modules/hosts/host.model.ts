@@ -3,8 +3,7 @@ import { ObjectId } from 'mongodb';
 export const HOST_GENDERS = ['male', 'female'] as const;
 export type HostGender = (typeof HOST_GENDERS)[number];
 
-export const HOST_SKILLS = ['Tech', 'Science', 'Art'] as const;
-export type HostSkill = (typeof HOST_SKILLS)[number];
+export type HostSkill = string;
 
 export const HOST_AVATAR_SOURCES = ['upload', 'ai'] as const;
 export type HostAvatarSource = (typeof HOST_AVATAR_SOURCES)[number];

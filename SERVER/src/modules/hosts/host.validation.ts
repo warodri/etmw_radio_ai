@@ -3,7 +3,6 @@ import { ApiError } from '../../utils/errors.js';
 import {
   HOST_AVATAR_SOURCES,
   HOST_GENDERS,
-  HOST_SKILLS,
   HostAvatar,
 } from './host.model.js';
 
@@ -25,9 +24,9 @@ const hostFields = {
     .min(10, 'Describe the host personality in at least 10 characters.')
     .max(4000, 'Keep the personality under 4,000 characters.'),
   skills: z
-    .array(z.enum(HOST_SKILLS))
-    .min(1, 'Choose at least one skill.')
-    .max(HOST_SKILLS.length, 'Choose no more than three skills.'),
+    .array(z.string().trim().min(1, 'Skills cannot be empty.').max(40, 'Keep each skill under 40 characters.'))
+    .min(1, 'Add at least one skill.')
+    .max(20, 'Add no more than 20 skills.'),
 };
 
 const avatarDataUrlSchema = z
@@ -55,7 +54,7 @@ export const generateHostAvatarSchema = z.object({
   name: z.string().trim().min(2).max(80),
   gender: z.enum(HOST_GENDERS),
   personality: z.string().trim().max(4000).default(''),
-  skills: z.array(z.enum(HOST_SKILLS)).min(1).max(HOST_SKILLS.length),
+  skills: z.array(z.string().trim().min(1).max(40)).min(1).max(20),
 });
 
 export type CreateHostInput = z.infer<typeof createHostSchema>;

@@ -284,45 +284,79 @@
               </div>
 
               <div>
-                <span class="field-label">Skills</span>
-                <div class="grid gap-2 sm:grid-cols-3">
-                  @for (skill of skillOptions; track skill) {
-                    <button
-                      type="button"
-                      [class]="
-                        isSkillSelected(skill)
-                          ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 p-3 text-left ring-1 ring-brand-500/20'
-                          : 'rounded-2xl border border-stone-300/80 bg-white/50 p-3 text-left transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30'
-                      "
-                      (click)="toggleSkill(skill)"
-                    >
-                      <span class="flex items-center justify-between gap-2">
-                        <span class="text-sm font-semibold text-ink-900 dark:text-white">
-                          {{ skill }}
-                        </span>
-                        @if (isSkillSelected(skill)) {
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <label class="field-label mb-0" for="hostSkills">Skills</label>
+                  <span class="text-[0.68rem] font-semibold text-stone-500 dark:text-stone-500">
+                    {{ form.controls.skills.value.length }} / 20
+                  </span>
+                </div>
+
+                @if (form.controls.skills.value.length > 0) {
+                  <div class="mt-3 flex flex-wrap gap-1.5">
+                    @for (skill of form.controls.skills.value; track skill) {
+                      <span class="chip chip--active">
+                        {{ skill }}
+                        <button
+                          type="button"
+                          class="ml-0.5 rounded-full p-0.5 transition-colors hover:bg-brand-500/20"
+                          [attr.aria-label]="'Remove skill ' + skill"
+                          (click)="removeSkill(skill)"
+                        >
                           <svg
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
                             stroke-width="2.4"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
                             aria-hidden="true"
-                            class="h-3.5 w-3.5 text-brand-600 dark:text-brand-300"
+                            class="h-3 w-3"
                           >
-                            <path d="m5 12 4.5 4.5L19 7" />
+                            <path d="M6 6l12 12M18 6 6 18" />
                           </svg>
-                        }
+                        </button>
                       </span>
-                      <span class="mt-1 block text-[0.68rem] leading-relaxed text-stone-500 dark:text-stone-400">
-                        {{ skillDescriptions[skill] }}
-                      </span>
+                    }
+                  </div>
+                }
+
+                <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    #skillDraftInput
+                    id="hostSkills"
+                    type="text"
+                    class="field-input"
+                    maxlength="400"
+                    autocomplete="off"
+                    placeholder="Type a skill and press Enter — anything goes"
+                    [value]="skillDraft()"
+                    (input)="onSkillDraftInput($event)"
+                    (keydown)="onSkillKeydown($event, skillDraftInput)"
+                    (blur)="commitSkillDraft(skillDraftInput)"
+                  />
+                  <button
+                    type="button"
+                    class="btn-secondary shrink-0 px-4 py-2.5 text-xs"
+                    (click)="addSkillTags(skillDraftInput)"
+                  >
+                    Add tag
+                  </button>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  @for (suggestion of skillSuggestions; track suggestion) {
+                    <button
+                      type="button"
+                      class="chip chip--small"
+                      (click)="addSkillTag(suggestion)"
+                    >
+                      + {{ suggestion }}
                     </button>
                   }
                 </div>
+
                 <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">
-                  Choose at least one. Listeners will know these are the host&apos;s topics.
+                  Add at least one. Press Enter or type a comma to turn what you typed into a tag.
+                  The suggestions are optional — any skill you want is allowed.
                 </p>
               </div>
             </div>

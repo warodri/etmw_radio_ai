@@ -23,8 +23,27 @@ function toObjectId(value: string, message = 'That host does not exist.'): Objec
   return new ObjectId(value);
 }
 
-function uniqueSkills<T extends string>(values: T[]): T[] {
-  return Array.from(new Set(values));
+function normalizeSkills(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const trimmed = value.trim();
+    const key = trimmed.toLowerCase();
+
+    if (!trimmed || seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(trimmed.slice(0, 40));
+
+    if (result.length >= 20) {
+      break;
+    }
+  }
+
+  return result;
 }
 
 export class HostService {
@@ -65,7 +84,7 @@ export class HostService {
       name: input.name.trim(),
       gender: input.gender,
       personality: input.personality.trim(),
-      skills: uniqueSkills(input.skills),
+      skills: normalizeSkills(input.skills),
       avatar: avatar ?? null,
       avatarSource: avatar ? input.avatarSource ?? 'upload' : null,
       createdAt: now,
@@ -105,7 +124,7 @@ export class HostService {
       fields.personality = input.personality;
     }
     if (input.skills !== undefined) {
-      fields.skills = uniqueSkills(input.skills);
+      fields.skills = normalizeSkills(input.skills);
     }
 
     if (input.avatarDataUrl !== undefined) {

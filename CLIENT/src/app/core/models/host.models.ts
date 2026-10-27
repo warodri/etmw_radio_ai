@@ -1,7 +1,7 @@
 import { RadioStation } from './station.models';
 
 export type HostGender = 'male' | 'female';
-export type HostSkill = 'Tech' | 'Science' | 'Art';
+export type HostSkill = string;
 export type HostAvatarSource = 'upload' | 'ai';
 
 export interface HostPersona {
@@ -47,10 +47,19 @@ export interface GenerateHostAvatarResponse {
   source: 'ai';
 }
 
-export const HOST_SKILLS: HostSkill[] = ['Tech', 'Science', 'Art'];
-
-export const HOST_SKILL_DESCRIPTIONS: Record<HostSkill, string> = {
-  Tech: 'Technology, products and the future',
-  Science: 'Science, discovery and the natural world',
-  Art: 'Culture, music, books and creativity',
-};
+export const HOST_SKILL_SUGGESTIONS: string[] = [
+  'Tech',
+  'Science',
+  'Art',
+  'Music',
+  'Culture',
+  'Politics',
+  'Business',
+  'Health',
+  'History',
+  'Film',
+  'Gaming',
+  'Travel',
+  'Comedy',
+  'Sports',
+];

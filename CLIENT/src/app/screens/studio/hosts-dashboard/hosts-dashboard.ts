@@ -2,8 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
-  HOST_SKILLS,
-  HOST_SKILL_DESCRIPTIONS,
+  HOST_SKILL_SUGGESTIONS,
   HostGender,
   HostPersona,
   HostSkill,
@@ -33,8 +32,7 @@ export class HostsDashboard implements OnInit {
 
   private slug = '';
 
-  protected readonly skillOptions = HOST_SKILLS;
-  protected readonly skillDescriptions = HOST_SKILL_DESCRIPTIONS;
+  protected readonly skillSuggestions = HOST_SKILL_SUGGESTIONS;
   protected readonly defaultArtwork = DEFAULT_STATION_ARTWORK;
 
   protected readonly station = signal<RadioStation | null>(null);
@@ -53,6 +51,7 @@ export class HostsDashboard implements OnInit {
   protected readonly avatarDataUrl = signal<string | null>(null);
   protected readonly avatarSource = signal<'upload' | 'ai' | null>(null);
   protected readonly removeAvatar = signal(false);
+  protected readonly skillDraft = signal('');
 
   protected readonly editing = computed(() => this.editingId() !== null);
   protected readonly formTitle = computed(() =>
@@ -128,6 +127,7 @@ export class HostsDashboard implements OnInit {
     this.editingId.set(null);
     this.formError.set(null);
     this.notice.set(null);
+    this.skillDraft.set('');
     this.resetAvatar();
     this.formOpen.set(true);
     this.scrollToForm();
@@ -144,6 +144,7 @@ export class HostsDashboard implements OnInit {
     this.formError.set(null);
     this.notice.set(null);
     this.avatarError.set(null);
+    this.skillDraft.set('');
     this.avatarPreview.set(this.creator.hostAvatarUrl(host));
     this.avatarDataUrl.set(null);
     this.avatarSource.set(host.avatarSource);
@@ -156,6 +157,7 @@ export class HostsDashboard implements OnInit {
     this.formOpen.set(false);
     this.editingId.set(null);
     this.formError.set(null);
+    this.skillDraft.set('');
     this.resetAvatar();
   }
 
@@ -164,22 +166,42 @@ export class HostsDashboard implements OnInit {
     this.form.controls.gender.markAsDirty();
   }
 
-  protected isSkillSelected(skill: HostSkill): boolean {
-    return this.form.controls.skills.value.includes(skill);
+  protected onSkillDraftInput(event: Event): void {
+    this.skillDraft.set((event.target as HTMLInputElement).value);
   }
 
-  protected toggleSkill(skill: HostSkill): void {
-    const current = new Set(this.form.controls.skills.value);
-
-    if (current.has(skill)) {
-      current.delete(skill);
-    } else {
-      current.add(skill);
+  protected onSkillKeydown(event: KeyboardEvent, input: HTMLInputElement): void {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      this.addSkillTags(input);
     }
+  }
 
-    this.form.controls.skills.setValue(Array.from(current));
+  protected addSkillTags(input?: HTMLInputElement): void {
+    const values = this.skillDraft().split(',');
+    this.addSkillValues(values);
+    this.skillDraft.set('');
+
+    if (input) {
+      input.value = '';
+    }
+  }
+
+  protected addSkillTag(skill: string): void {
+    this.addSkillValues([skill]);
+  }
+
+  protected removeSkill(skill: string): void {
+    this.form.controls.skills.setValue(
+      this.form.controls.skills.value.filter((item) => item !== skill),
+    );
     this.form.controls.skills.markAsDirty();
-    this.formError.set(null);
+  }
+
+  protected commitSkillDraft(input?: HTMLInputElement): void {
+    if (this.skillDraft().trim()) {
+      this.addSkillTags(input);
+    }
   }
 
   protected nameInvalid(): boolean {
@@ -233,6 +255,7 @@ export class HostsDashboard implements OnInit {
   }
 
   protected generateAvatar(): void {
+    this.commitSkillDraft();
     const values = this.form.getRawValue();
 
     if (values.name.trim().length < 2) {
@@ -281,6 +304,7 @@ export class HostsDashboard implements OnInit {
   }
 
   protected save(): void {
+    this.commitSkillDraft();
     this.form.markAllAsTouched();
     this.formError.set(null);
     this.notice.set(null);
@@ -358,6 +382,27 @@ export class HostsDashboard implements OnInit {
         this.pageError.set(apiErrorMessage(error));
       },
     });
+  }
+
+  private addSkillValues(values: string[]): void {
+    const current = [...this.form.controls.skills.value];
+    const seen = new Set(current.map((skill) => skill.toLowerCase()));
+
+    for (const value of values) {
+      const trimmed = value.trim().replace(/\s+/g, ' ');
+      const key = trimmed.toLowerCase();
+
+      if (!trimmed || seen.has(key) || current.length >= 20) {
+        continue;
+      }
+
+      current.push(trimmed.slice(0, 40));
+      seen.add(key);
+    }
+
+    this.form.controls.skills.setValue(current);
+    this.form.controls.skills.markAsDirty();
+    this.formError.set(null);
   }
 
   private resetAvatar(): void {
