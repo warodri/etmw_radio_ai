@@ -30,6 +30,9 @@ export async function connectDatabase(): Promise<Db> {
     .createIndex({ stationId: 1, ownerId: 1, createdAt: -1 });
   await db.collection('creator_songs').createIndex({ status: 1, createdAt: 1 });
   await db
+    .collection('hosts')
+    .createIndex({ stationId: 1, ownerId: 1, createdAt: 1 });
+  await db
     .collection('creator_preferences')
     .createIndex({ stationId: 1, ownerId: 1 }, { unique: true });
 

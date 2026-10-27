@@ -7,6 +7,14 @@ import {
   CreateCreatorSongResponse,
   CreatorDashboardResponse,
 } from '../models/creator.models';
+import {
+  GenerateHostAvatarPayload,
+  GenerateHostAvatarResponse,
+  HostListResponse,
+  HostPayload,
+  HostPersona,
+  HostResponse,
+} from '../models/host.models';
 
 @Injectable({ providedIn: 'root' })
 export class CreatorService {
@@ -35,6 +43,62 @@ export class CreatorService {
       `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/songs`,
       payload,
     );
+  }
+
+
+  getHosts(slug: string): Observable<HostListResponse> {
+    return this.http.get<HostListResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts`,
+    );
+  }
+
+  createHost(
+    slug: string,
+    payload: HostPayload,
+  ): Observable<HostResponse> {
+    return this.http.post<HostResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts`,
+      payload,
+    );
+  }
+
+  updateHost(
+    slug: string,
+    hostId: string,
+    payload: Partial<HostPayload>,
+  ): Observable<HostResponse> {
+    return this.http.patch<HostResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}`,
+      payload,
+    );
+  }
+
+  deleteHost(slug: string, hostId: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}`,
+    );
+  }
+
+  generateHostAvatar(
+    slug: string,
+    payload: GenerateHostAvatarPayload,
+  ): Observable<GenerateHostAvatarResponse> {
+    return this.http.post<GenerateHostAvatarResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/avatar/generate`,
+      payload,
+    );
+  }
+
+  hostAvatarUrl(host: Pick<HostPersona, 'avatarUrl'>): string | null {
+    if (!host.avatarUrl) {
+      return null;
+    }
+
+    if (/^https?:\/\//i.test(host.avatarUrl)) {
+      return host.avatarUrl;
+    }
+
+    return `${API_BASE_URL}${host.avatarUrl}`;
   }
 
   getSongAudio(slug: string, songId: string): Observable<Blob> {

@@ -102,6 +102,25 @@
             <a [routerLink]="['/stations', current.slug]" class="btn-secondary">
               View station
             </a>
+            <a
+              [routerLink]="['/studio', current.slug, 'creator', 'hosts']"
+              class="btn-secondary"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="h-4 w-4"
+              >
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20a7 7 0 0 1 14 0" />
+              </svg>
+              Hosts
+            </a>
             <a [routerLink]="['/studio', current.slug, 'edit']" class="btn-secondary">
               Edit settings
             </a>
@@ -454,6 +473,23 @@
                 </p>
               </li>
             </ol>
+          </section>
+
+          <section class="surface-card p-5 sm:p-6">
+            <p class="eyebrow">Host personas</p>
+            <h2 class="mt-2 font-display text-lg font-semibold text-ink-900 dark:text-white">
+              Give the show a voice
+            </h2>
+            <p class="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+              Create hosts with a name, personality and skills. Listeners will know who is on air
+              and what they talk about.
+            </p>
+            <a
+              [routerLink]="['/studio', current.slug, 'creator', 'hosts']"
+              class="btn-secondary mt-4 w-full text-xs"
+            >
+              Manage hosts
+            </a>
           </section>
 
           <section class="surface-card p-5 sm:p-6">

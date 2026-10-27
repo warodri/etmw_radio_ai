@@ -1,0 +1,597 @@
+<section class="app-container py-8 sm:py-12">
+  <a
+    routerLink="/studio"
+    class="mb-5 inline-flex items-center gap-2 rounded-full text-sm font-semibold text-stone-500 transition-colors hover:text-brand-700 dark:text-stone-400 dark:hover:text-brand-300"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      class="h-4 w-4"
+    >
+      <path d="M19 12H5" />
+      <path d="m11 18-6-6 6-6" />
+    </svg>
+    Back to your studio
+  </a>
+
+  @if (loading()) {
+    <div class="space-y-5">
+      <div class="surface-card h-52 animate-pulse bg-stone-200/60 dark:bg-white/5"></div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div class="surface-card h-64 animate-pulse bg-stone-200/60 dark:bg-white/5"></div>
+        }
+      </div>
+    </div>
+  } @else if (pageError() && !station()) {
+    <div class="surface-card mx-auto flex max-w-xl flex-col items-center px-6 py-12 text-center">
+      <span
+        class="flex h-14 w-14 items-center justify-center rounded-3xl border border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-300"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+          class="h-6 w-6"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7.5v5.5" />
+          <path d="M12 16.5h.01" />
+        </svg>
+      </span>
+      <h1 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">
+        Host personas unavailable
+      </h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+        {{ pageError() }}
+      </p>
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
+        <button type="button" class="btn-secondary" (click)="loadHosts()">Try again</button>
+        <a routerLink="/studio" class="btn-secondary">Back to your studio</a>
+      </div>
+    </div>
+  } @else {
+    @if (station(); as current) {
+      <header class="surface-card relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          class="absolute inset-0 bg-[radial-gradient(55rem_28rem_at_95%_-20%,rgba(249,115,22,0.18),transparent_65%)]"
+        ></div>
+        <div
+          class="relative flex flex-col gap-6 p-5 sm:p-7 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <div class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+            <img
+              [src]="stationArtwork(current)"
+              [alt]="current.name + ' artwork'"
+              class="h-20 w-20 shrink-0 rounded-2xl border border-stone-200/80 object-cover shadow-lg shadow-stone-900/10 dark:border-white/10"
+            />
+            <div class="min-w-0">
+              <p class="eyebrow">Host personas</p>
+              <h1
+                class="mt-2 break-words font-display text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl dark:text-white"
+              >
+                The voices of {{ current.name }}
+              </h1>
+              <p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+                Create the people who host the show. Their name, personality and skills shape how
+                they sound and what they talk about.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex shrink-0 flex-wrap gap-2">
+            <a [routerLink]="['/studio', current.slug, 'creator']" class="btn-secondary">
+              Song studio
+            </a>
+            <button type="button" class="btn-primary" (click)="openCreate()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
+                class="h-4 w-4"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              New host
+            </button>
+          </div>
+        </div>
+      </header>
+
+      @if (notice()) {
+        <div
+          class="mt-4 flex items-start gap-2.5 rounded-2xl border border-signal-500/25 bg-signal-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-signal-400"
+          role="status"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="mt-0.5 h-4 w-4 shrink-0"
+          >
+            <path d="m5 12 4.5 4.5L19 7" />
+          </svg>
+          {{ notice() }}
+        </div>
+      }
+
+      @if (pageError()) {
+        <div
+          class="mt-4 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          <span class="flex-1">{{ pageError() }}</span>
+          <button
+            type="button"
+            class="text-xs font-bold uppercase tracking-[0.14em] underline-offset-2 hover:underline"
+            (click)="loadHosts()"
+          >
+            Retry
+          </button>
+        </div>
+      }
+
+      @if (formOpen()) {
+        <form
+          id="host-form"
+          class="surface-card mt-5 scroll-mt-24 p-5 sm:p-7"
+          [formGroup]="form"
+          (ngSubmit)="save()"
+          novalidate
+        >
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p class="eyebrow">{{ editing() ? 'Edit host' : 'New host' }}</p>
+              <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">
+                {{ formTitle() }}
+              </h2>
+              <p class="mt-1 max-w-2xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+                Give the host a distinct voice. Upload an avatar or let OpenAI cast the face from
+                the name, personality and skills.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="icon-button h-9 w-9"
+              aria-label="Close host form"
+              (click)="closeForm()"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
+                class="h-4 w-4"
+              >
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          </div>
+
+          @if (formError()) {
+            <div
+              class="mt-5 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+              role="alert"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.9"
+                stroke-linecap="round"
+                aria-hidden="true"
+                class="mt-0.5 h-4 w-4 shrink-0"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7.5v5.5" />
+                <path d="M12 16.5h.01" />
+              </svg>
+              {{ formError() }}
+            </div>
+          }
+
+          <div class="mt-6 grid gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)]">
+            <div class="space-y-6">
+              <div class="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label class="field-label" for="hostName">Host name</label>
+                  <input
+                    id="hostName"
+                    type="text"
+                    class="field-input"
+                    formControlName="name"
+                    maxlength="80"
+                    autocomplete="off"
+                    placeholder="Nova"
+                  />
+                  @if (nameInvalid()) {
+                    <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                      Give the host a name of 2-80 characters.
+                    </p>
+                  }
+                </div>
+
+                <div>
+                  <span class="field-label">Gender</span>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      [class]="
+                        form.controls.gender.value === 'female'
+                          ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 px-3 py-3 text-sm font-semibold text-brand-700 dark:text-brand-300'
+                          : 'rounded-2xl border border-stone-300/80 bg-white/50 px-3 py-3 text-sm font-semibold text-stone-600 transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:text-stone-300'
+                      "
+                      (click)="setGender('female')"
+                    >
+                      Female
+                    </button>
+                    <button
+                      type="button"
+                      [class]="
+                        form.controls.gender.value === 'male'
+                          ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 px-3 py-3 text-sm font-semibold text-brand-700 dark:text-brand-300'
+                          : 'rounded-2xl border border-stone-300/80 bg-white/50 px-3 py-3 text-sm font-semibold text-stone-600 transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:text-stone-300'
+                      "
+                      (click)="setGender('male')"
+                    >
+                      Male
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="field-label" for="hostPersonality">Personality</label>
+                <textarea
+                  id="hostPersonality"
+                  class="field-input min-h-36 resize-y"
+                  formControlName="personality"
+                  maxlength="4000"
+                  placeholder="Curious, quick-witted and warm. Asks the question everyone is thinking, then lets the answer breathe."
+                ></textarea>
+                <div class="mt-2 flex items-center justify-between gap-3">
+                  @if (personalityInvalid()) {
+                    <p class="text-xs font-medium text-red-600 dark:text-red-400">
+                      Describe the personality in at least 10 characters.
+                    </p>
+                  } @else {
+                    <p class="text-xs text-stone-500 dark:text-stone-500">
+                      This guides how the host speaks and reacts on air.
+                    </p>
+                  }
+                  <span class="text-[0.68rem] text-stone-500 dark:text-stone-500">
+                    {{ form.controls.personality.value.length }} / 4,000
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span class="field-label">Skills</span>
+                <div class="grid gap-2 sm:grid-cols-3">
+                  @for (skill of skillOptions; track skill) {
+                    <button
+                      type="button"
+                      [class]="
+                        isSkillSelected(skill)
+                          ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 p-3 text-left ring-1 ring-brand-500/20'
+                          : 'rounded-2xl border border-stone-300/80 bg-white/50 p-3 text-left transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30'
+                      "
+                      (click)="toggleSkill(skill)"
+                    >
+                      <span class="flex items-center justify-between gap-2">
+                        <span class="text-sm font-semibold text-ink-900 dark:text-white">
+                          {{ skill }}
+                        </span>
+                        @if (isSkillSelected(skill)) {
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.4"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            class="h-3.5 w-3.5 text-brand-600 dark:text-brand-300"
+                          >
+                            <path d="m5 12 4.5 4.5L19 7" />
+                          </svg>
+                        }
+                      </span>
+                      <span class="mt-1 block text-[0.68rem] leading-relaxed text-stone-500 dark:text-stone-400">
+                        {{ skillDescriptions[skill] }}
+                      </span>
+                    </button>
+                  }
+                </div>
+                <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">
+                  Choose at least one. Listeners will know these are the host&apos;s topics.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <span class="field-label">Avatar</span>
+              <div
+                class="relative aspect-square w-full max-w-[240px] overflow-hidden rounded-3xl border border-stone-300/80 bg-gradient-to-br from-brand-500/20 via-brand-600/10 to-amber-300/10 dark:border-white/10"
+              >
+                @if (avatarPreview(); as preview) {
+                  <img
+                    [src]="preview"
+                    alt="Host avatar preview"
+                    class="h-full w-full object-cover"
+                  />
+                } @else {
+                  <div class="flex h-full w-full items-center justify-center">
+                    <span class="font-display text-5xl font-semibold text-brand-700/40 dark:text-brand-300/30">
+                      {{ initials(form.controls.name.value) || '?' }}
+                    </span>
+                  </div>
+                }
+
+                @if (avatarSource(); as source) {
+                  <span class="absolute left-2 top-2 rounded-full bg-ink-950/80 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
+                    {{ source === 'ai' ? 'AI avatar' : 'Uploaded' }}
+                  </span>
+                }
+
+                @if (generatingAvatar()) {
+                  <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-ink-950/75 px-4 text-center text-white backdrop-blur-sm">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                      class="h-6 w-6 animate-spin"
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" />
+                    </svg>
+                    <span class="text-xs font-semibold">Casting the host…</span>
+                    <span class="text-[0.65rem] text-white/70">OpenAI usually takes 20-40 seconds.</span>
+                  </div>
+                }
+              </div>
+
+              <input
+                id="hostAvatar"
+                type="file"
+                class="sr-only"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                (change)="onAvatarSelected($event)"
+              />
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <label
+                  for="hostAvatar"
+                  class="btn-secondary cursor-pointer px-3 py-2 text-xs"
+                  [class.pointer-events-none]="generatingAvatar()"
+                  [class.opacity-50]="generatingAvatar()"
+                >
+                  Upload image
+                </label>
+                <button
+                  type="button"
+                  class="btn-primary px-3 py-2 text-xs"
+                  [disabled]="generatingAvatar() || saving()"
+                  (click)="generateAvatar()"
+                >
+                  @if (generatingAvatar()) {
+                    Creating…
+                  } @else {
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.9"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      class="h-3.5 w-3.5"
+                    >
+                      <path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6Z" />
+                      <path d="m18.5 15 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z" />
+                    </svg>
+                    Create with AI
+                  }
+                </button>
+                @if (avatarPreview()) {
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-500/15 dark:text-red-300"
+                    [disabled]="generatingAvatar() || saving()"
+                    (click)="removeAvatarImage()"
+                  >
+                    Remove
+                  </button>
+                }
+              </div>
+
+              <p class="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-500">
+                PNG, JPEG, WebP or GIF up to 2 MB. AI avatars are generated with OpenAI from the
+                host&apos;s name, personality and skills.
+              </p>
+              @if (avatarError()) {
+                <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                  {{ avatarError() }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <div
+            class="mt-7 flex flex-col gap-3 border-t border-stone-200/80 pt-5 sm:flex-row sm:items-center sm:justify-end dark:border-white/5"
+          >
+            <button
+              type="button"
+              class="btn-secondary"
+              [disabled]="saving() || generatingAvatar()"
+              (click)="closeForm()"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="saving() || generatingAvatar()"
+            >
+              @if (saving()) {
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                  class="h-4 w-4 animate-spin"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" />
+                </svg>
+                Saving…
+              } @else {
+                {{ editing() ? 'Save host' : 'Create host' }}
+              }
+            </button>
+          </div>
+        </form>
+      }
+
+      <section class="mt-8">
+        <div class="flex flex-wrap items-end justify-between gap-4 border-t border-stone-200/70 pt-8 dark:border-white/5">
+          <div>
+            <p class="eyebrow">On the show</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl dark:text-white">
+              Host personas
+            </h2>
+            <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">
+              {{ hosts().length }}
+              {{ hosts().length === 1 ? 'host' : 'hosts' }}
+              ready for {{ current.name }}.
+            </p>
+          </div>
+          <button type="button" class="btn-secondary px-3 py-2 text-xs" (click)="openCreate()">
+            New host
+          </button>
+        </div>
+
+        @if (hosts().length === 0) {
+          <div class="surface-card mt-5 flex flex-col items-center px-6 py-12 text-center">
+            <span class="flex h-14 w-14 items-center justify-center rounded-3xl border border-brand-500/25 bg-brand-500/10 text-brand-600 dark:text-brand-300">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="h-6 w-6"
+              >
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20a7 7 0 0 1 14 0" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">
+              Give the station a voice
+            </h3>
+            <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+              Create the first host persona for {{ current.name }}. You can add as many as the
+              show needs.
+            </p>
+            <button type="button" class="btn-primary mt-6" (click)="openCreate()">
+              Create a host
+            </button>
+          </div>
+        } @else {
+          <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            @for (host of hosts(); track host.id) {
+              <article class="surface-card flex flex-col p-4 sm:p-5">
+                <div class="flex items-start gap-4">
+                  @if (hostAvatar(host); as avatar) {
+                    <img
+                      [src]="avatar"
+                      [alt]="host.name + ' avatar'"
+                      class="h-16 w-16 shrink-0 rounded-2xl border border-stone-200/80 object-cover dark:border-white/10"
+                      loading="lazy"
+                    />
+                  } @else {
+                    <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 font-display text-xl font-semibold text-white">
+                      {{ initials(host.name) }}
+                    </span>
+                  }
+
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <h3 class="break-words font-display text-lg font-semibold tracking-tight text-ink-900 dark:text-white">
+                        {{ host.name }}
+                      </h3>
+                      @if (host.avatarSource === 'ai') {
+                        <span class="rounded-full border border-brand-500/25 bg-brand-500/10 px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-[0.12em] text-brand-700 dark:text-brand-300">
+                          AI avatar
+                        </span>
+                      }
+                    </div>
+                    <p class="mt-0.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-500">
+                      {{ host.gender }}
+                    </p>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                      @for (skill of host.skills; track skill) {
+                        <span class="chip chip--small">{{ skill }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <p class="mt-4 line-clamp-4 text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+                  {{ host.personality }}
+                </p>
+
+                <div class="mt-auto flex items-center justify-between gap-2 border-t border-stone-200/80 pt-4 dark:border-white/5">
+                  <a
+                    [routerLink]="['/stations', current.slug]"
+                    class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-stone-500 transition-colors hover:text-brand-700 dark:text-stone-500 dark:hover:text-brand-300"
+                  >
+                    View station
+                  </a>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      class="btn-secondary px-3 py-2 text-xs"
+                      (click)="openEdit(host)"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-500/15 disabled:opacity-50 dark:text-red-300"
+                      [disabled]="deletingId() === host.id"
+                      (click)="remove(host)"
+                    >
+                      @if (deletingId() === host.id) { Deleting… } @else { Delete }
+                    </button>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</section>

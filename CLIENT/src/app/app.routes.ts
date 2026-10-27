@@ -41,6 +41,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'studio/:slug/creator/hosts',
+    title: 'Host personas · ETMW Radio AI',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./screens/studio/hosts-dashboard/hosts-dashboard').then(
+        (component) => component.HostsDashboard,
+      ),
+  },
+  {
     path: 'studio',
     title: 'Your studio · ETMW Radio AI',
     canActivate: [authGuard],

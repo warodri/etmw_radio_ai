@@ -79,6 +79,13 @@ const envSchema = z.object({
   SONGS_API_KEY: z.string().default(''),
   SONGS_API_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
   CREATOR_MAX_DURATION_SECONDS: z.coerce.number().int().positive().max(240).default(240),
+
+  OPENAI_API_KEY: z.string().default(''),
+  OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+  OPENAI_IMAGE_MODEL: z.string().default('gpt-image-2.5-sunburst'),
+  OPENAI_IMAGE_SIZE: z.string().default('1024x1024'),
+  OPENAI_IMAGE_QUALITY: z.enum(['low', 'medium', 'high', 'auto']).default('medium'),
+  OPENAI_IMAGE_TIMEOUT_MS: z.coerce.number().int().positive().default(180000),
 });
 
 const parsed = envSchema.parse(process.env);
