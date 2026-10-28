@@ -362,7 +362,7 @@ We are almost home from here`,
         next: (response) => {
           this.submitting.set(false);
           this.notice.set(
-            `“${response.song.title}” is in the ETMW Songs queue. We will show it here as soon as it is ready.`,
+            `“${response.song.title}” is in the ETMW Radio AI queue. We will show it here as soon as it is ready.`,
           );
           this.form.patchValue({ title: '', lyrics: '' });
           this.closePlayer();

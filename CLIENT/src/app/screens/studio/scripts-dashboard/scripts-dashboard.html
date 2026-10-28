@@ -37,7 +37,7 @@
               <p class="eyebrow">Host scripts</p>
               <h1 class="mt-2 break-words font-display text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl dark:text-white">The voices of {{ current.name }}</h1>
               <p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-                Build a solo segment or a two-host conversation. Poirot researches, Qwen writes the spoken turns, and VoiceStudio gives each host their own voice.
+                Build a solo segment or a two-host conversation. ETMW Radio AI researches, writes the spoken turns, and gives each host their own voice.
               </p>
             </div>
           </div>
@@ -73,9 +73,9 @@
             </p>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <span class="chip chip--small">Poirot research</span>
-            <span class="chip chip--small">Qwen writer</span>
-            <span class="chip chip--small">Two voices</span>
+            <span class="chip chip--small">AI research</span>
+            <span class="chip chip--small">AI writing</span>
+            <span class="chip chip--small">Two host voices</span>
           </div>
         </div>
 
@@ -129,7 +129,7 @@
             </button>
             <button type="button" [class]="mode() === 'guideline' ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 p-3 text-left ring-1 ring-brand-500/20' : 'rounded-2xl border border-stone-300/80 bg-white/50 p-3 text-left transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30'" (click)="setMode('guideline')">
               <span class="block text-sm font-semibold text-ink-900 dark:text-white">Give the AI a topic</span>
-              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Describe the segment. Research is included automatically and Qwen writes the full conversation.</span>
+              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Describe the segment. Research is included automatically and ETMW Radio AI writes the full conversation.</span>
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@
             <input type="checkbox" class="mt-0.5 h-4 w-4 rounded border-stone-300 accent-brand-600" [checked]="research()" (change)="onResearchChange($event)" />
             <span>
               <span class="block font-semibold text-ink-900 dark:text-white">Research this topic</span>
-              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Poirot researches the subject and the draft merges those findings with both hosts' notes.</span>
+              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">ETMW Radio AI researches the subject and the draft merges those findings with both hosts' notes.</span>
             </span>
           </label>
         } @else {
@@ -170,7 +170,7 @@
               <span class="text-[0.68rem] font-semibold" [class.text-red-600]="sourceWordCount() > limits().maxWords" [class.text-stone-500]="sourceWordCount() <= limits().maxWords">{{ sourceWordCount() }} / {{ limits().maxWords }} words</span>
             </div>
             <textarea id="scriptGuideline" class="field-input mt-2 min-h-40 resize-y" maxlength="8000" placeholder="For example: Talk about the result of the elections in Brazil in October 2026…" [value]="guideline()" (input)="onGuidelineInput($event)"></textarea>
-            <p class="mt-2 text-xs leading-relaxed text-brand-800 dark:text-brand-200">Poirot research is included automatically. Qwen will shape it into a conversation for {{ selectedHosts().length === 2 ? 'both hosts' : 'the host' }}.</p>
+            <p class="mt-2 text-xs leading-relaxed text-brand-800 dark:text-brand-200">Research is included automatically. ETMW Radio AI will shape it into a conversation for {{ selectedHosts().length === 2 ? 'both hosts' : 'the host' }}.</p>
           </div>
         }
 
