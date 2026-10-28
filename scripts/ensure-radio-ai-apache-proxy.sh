@@ -36,7 +36,7 @@ API_BASE="http://127.0.0.1:$PORT"
   echo "ProxyPassReverse \"$APACHE_CLIENT_PREFIX/api\" \"$API_BASE/api\""
   echo
   echo "# Research and script generation can take several minutes."
-  echo "ProxyTimeout 600"
+  echo "ProxyTimeout 1200"
   echo
   echo "<Directory \"$REMOTE_WEB_ROOT\">"
   echo "  Options -Indexes +FollowSymLinks"

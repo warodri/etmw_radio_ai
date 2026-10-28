@@ -115,7 +115,7 @@ const envSchema = z.object({
   PHONON_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
 
   OLLAMA_TEXT_MODEL: z.string().default('qwen3-vl:32b-instruct'),
-  OLLAMA_TEXT_TIMEOUT_MS: z.coerce.number().int().positive().default(300000),
+  OLLAMA_TEXT_TIMEOUT_MS: z.coerce.number().int().positive().default(900000),
 
   POIROT_API_URL: z
     .string()

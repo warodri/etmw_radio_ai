@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 
 export type ScriptSpeakerLabel = 'A' | 'B';
 
@@ -68,6 +69,70 @@ function cleanSpokenText(value: string): string {
     .replace(/\r/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+async function readChatStream(response: Response): Promise<string> {
+  if (!response.body) {
+    throw new Error('The script writer returned no response body.');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let pending = '';
+  let content = '';
+
+  const handleLine = (line: string): void => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      return;
+    }
+
+    let event: OllamaChatResponse;
+
+    try {
+      event = JSON.parse(trimmed) as OllamaChatResponse;
+    } catch {
+      return;
+    }
+
+    if (event.error) {
+      const message =
+        typeof event.error === 'string'
+          ? event.error
+          : event.error.message ?? 'The script writer stopped unexpectedly.';
+      throw new ApiError(502, 'SCRIPT_WRITER_FAILED', message);
+    }
+
+    const piece = event.message?.content;
+
+    if (piece) {
+      content += piece;
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    pending += decoder.decode(value, { stream: true });
+    const lines = pending.split('\n');
+    pending = lines.pop() ?? '';
+
+    for (const line of lines) {
+      handleLine(line);
+    }
+  }
+
+  pending += decoder.decode();
+  for (const line of pending.split('\n')) {
+    handleLine(line);
+  }
+
+  return content;
 }
 
 function parseTurns(content: string): GeneratedScriptTurn[] {
@@ -195,7 +260,7 @@ class OllamaTextService {
               { role: 'user', content: userParts.join('\n\n') },
             ],
             format: TURN_SCHEMA,
-            stream: false,
+            stream: true,
             options: {
               temperature: 0.7,
               top_p: 0.9,
@@ -215,9 +280,10 @@ class OllamaTextService {
 
     if (!response.ok) {
       let message = 'The script writer could not write this conversation.';
+      const raw = await response.text().catch(() => '');
 
       try {
-        const body = (await response.json()) as OllamaChatResponse;
+        const body = JSON.parse(raw) as OllamaChatResponse;
         if (typeof body.error === 'string') {
           message = body.error;
         } else if (body.error?.message) {
@@ -227,11 +293,28 @@ class OllamaTextService {
         // Keep the fallback.
       }
 
+      logger.warn('ollama.conversation_failed', {
+        status: response.status,
+        body: raw.slice(0, 400),
+      });
       throw new ApiError(502, 'SCRIPT_WRITER_FAILED', message);
     }
 
-    const body = (await response.json()) as OllamaChatResponse;
-    const content = body.message?.content ?? '';
+    let content: string;
+
+    try {
+      content = await readChatStream(response);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      throw new ApiError(
+        502,
+        'SCRIPT_WRITER_UNAVAILABLE',
+        'The script writer is unavailable. Please try again in a moment.',
+      );
+    }
 
     if (!content.trim()) {
       throw new ApiError(
