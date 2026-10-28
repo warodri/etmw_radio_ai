@@ -7,6 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -33,7 +34,7 @@ const PAGE_SIZE = 6;
 
 @Component({
   selector: 'app-scripts-dashboard',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, FormsModule, RouterLink],
   templateUrl: './scripts-dashboard.html',
   styleUrl: './scripts-dashboard.scss',
 })
