@@ -13,16 +13,26 @@ export interface ScriptSource {
   url: string;
 }
 
-export interface ScriptView {
+export interface ScriptParticipant {
   id: string;
+  name: string;
+}
+
+export interface ScriptTurn {
   hostId: string;
   hostName: string;
+  text: string;
+}
+
+export interface ScriptView {
+  id: string;
+  participants: ScriptParticipant[];
+  turns: ScriptTurn[];
   title: string;
   mode: ScriptMode;
   research: boolean;
   researchBrief: string | null;
   researchSources: ScriptSource[];
-  scriptText: string;
   wordCount: number;
   status: ScriptStatus;
   error: string | null;
@@ -44,6 +54,7 @@ export interface ScriptPagination {
 export interface ScriptLimits {
   maxWords: number;
   maxDurationSeconds: number;
+  maxHosts: number;
 }
 
 export interface ScriptListResponse {
@@ -56,17 +67,28 @@ export interface ScriptResponse {
   script: ScriptView;
 }
 
-export interface CreateScriptDraftPayload {
+export interface ScriptTextSourcePayload {
   hostId: string;
+  text: string;
+}
+
+export interface CreateScriptDraftPayload {
+  participants: string[];
   title?: string;
   mode: ScriptMode;
-  text: string;
+  texts?: ScriptTextSourcePayload[];
+  guideline?: string;
   research: boolean;
+}
+
+export interface ScriptTurnPayload {
+  hostId: string;
+  text: string;
 }
 
 export interface UpdateScriptDraftPayload {
   title?: string;
-  scriptText: string;
+  turns: ScriptTurnPayload[];
 }
 
 export const SCRIPT_STATUS_LABELS: Record<ScriptStatus, string> = {

@@ -132,6 +132,7 @@ const envSchema = z.object({
   VOICE_STUDIO_TIMEOUT_MS: z.coerce.number().int().positive().default(900000),
 
   SCRIPT_MAX_WORDS: z.coerce.number().int().positive().default(1300),
+  SCRIPT_MAX_HOSTS: z.coerce.number().int().positive().max(8).default(2),
   SCRIPT_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(600),
 });
 

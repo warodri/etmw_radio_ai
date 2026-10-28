@@ -1,21 +1,6 @@
 <section class="app-container py-8 sm:py-12">
-  <a
-    routerLink="/studio"
-    class="mb-5 inline-flex items-center gap-2 rounded-full text-sm font-semibold text-stone-500 transition-colors hover:text-brand-700 dark:text-stone-400 dark:hover:text-brand-300"
-  >
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.9"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-      class="h-4 w-4"
-    >
-      <path d="M19 12H5" />
-      <path d="m11 18-6-6 6-6" />
-    </svg>
+  <a routerLink="/studio" class="mb-5 inline-flex items-center gap-2 rounded-full text-sm font-semibold text-stone-500 transition-colors hover:text-brand-700 dark:text-stone-400 dark:hover:text-brand-300">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4"><path d="M19 12H5" /><path d="m11 18-6-6 6-6" /></svg>
     Back to your studio
   </a>
 
@@ -31,21 +16,11 @@
     </div>
   } @else if (pageError() && !station()) {
     <div class="surface-card mx-auto flex max-w-xl flex-col items-center px-6 py-12 text-center">
-      <span
-        class="flex h-14 w-14 items-center justify-center rounded-3xl border border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-300"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" class="h-6 w-6">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 7.5v5.5" />
-          <path d="M12 16.5h.01" />
-        </svg>
+      <span class="flex h-14 w-14 items-center justify-center rounded-3xl border border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-300">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" class="h-6 w-6"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5" /><path d="M12 16.5h.01" /></svg>
       </span>
-      <h1 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">
-        Script studio unavailable
-      </h1>
-      <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-        {{ pageError() }}
-      </p>
+      <h1 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">Script studio unavailable</h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">{{ pageError() }}</p>
       <div class="mt-6 flex flex-wrap justify-center gap-2">
         <button type="button" class="btn-secondary" (click)="refresh()">Try again</button>
         <a routerLink="/studio" class="btn-secondary">Back to your studio</a>
@@ -60,11 +35,9 @@
             <img [src]="stationArtwork(current)" [alt]="current.name + ' artwork'" class="h-20 w-20 shrink-0 rounded-2xl border border-stone-200/80 object-cover shadow-lg shadow-stone-900/10 dark:border-white/10" />
             <div class="min-w-0">
               <p class="eyebrow">Host scripts</p>
-              <h1 class="mt-2 break-words font-display text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl dark:text-white">
-                The stories of {{ current.name }}
-              </h1>
+              <h1 class="mt-2 break-words font-display text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl dark:text-white">The voices of {{ current.name }}</h1>
               <p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-                Research a topic, write it in a host's voice, approve the script, and queue the spoken audio.
+                Build a solo segment or a two-host conversation. Poirot researches, Qwen writes the spoken turns, and VoiceStudio gives each host their own voice.
               </p>
             </div>
           </div>
@@ -78,9 +51,7 @@
 
       @if (notice()) {
         <div class="mt-4 flex items-start gap-2.5 rounded-2xl border border-signal-500/25 bg-signal-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-signal-400" role="status">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mt-0.5 h-4 w-4 shrink-0">
-            <path d="m5 12 4.5 4.5L19 7" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mt-0.5 h-4 w-4 shrink-0"><path d="m5 12 4.5 4.5L19 7" /></svg>
           {{ notice() }}
         </div>
       }
@@ -92,21 +63,19 @@
         </div>
       }
 
-      <form class="surface-card mt-5 p-5 sm:p-7" [formGroup]="form" (ngSubmit)="createDraft()" novalidate>
+      <form class="surface-card mt-5 p-5 sm:p-7" (ngSubmit)="createDraft()" novalidate>
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p class="eyebrow">Write a segment</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">
-              Create a host script
-            </h2>
+            <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">Create a host conversation</h2>
             <p class="mt-1 max-w-2xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-              Bring your own text or give the AI a topic. Poirot researches the subject and Qwen writes it in your host's voice.
+              Choose one or two hosts, give them notes or a topic, then review the spoken turns before any audio is made.
             </p>
           </div>
           <div class="flex flex-wrap gap-1.5">
             <span class="chip chip--small">Poirot research</span>
             <span class="chip chip--small">Qwen writer</span>
-            <span class="chip chip--small">VoiceStudio audio</span>
+            <span class="chip chip--small">Two voices</span>
           </div>
         </div>
 
@@ -119,31 +88,35 @@
 
         @if (formError()) {
           <div class="mt-5 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" class="mt-0.5 h-4 w-4 shrink-0">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7.5v5.5" />
-              <path d="M12 16.5h.01" />
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" class="mt-0.5 h-4 w-4 shrink-0"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5" /><path d="M12 16.5h.01" /></svg>
             {{ formError() }}
           </div>
         }
 
-        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+        <div class="mt-6">
+          <label class="field-label" for="scriptTitle">Segment title <span class="font-normal text-stone-400">(optional)</span></label>
+          <input id="scriptTitle" type="text" class="field-input" maxlength="120" autocomplete="off" placeholder="The night shift welcomes..." [value]="title()" (input)="onTitleInput($event)" />
+        </div>
+
+        <div class="mt-5 grid gap-5 sm:grid-cols-2">
           <div>
-            <label class="field-label" for="scriptTitle">Segment title <span class="font-normal text-stone-400">(optional)</span></label>
-            <input id="scriptTitle" type="text" class="field-input" formControlName="title" maxlength="120" autocomplete="off" placeholder="The night shift welcomes..." />
-          </div>
-          <div>
-            <label class="field-label" for="scriptHost">Host</label>
-            <select id="scriptHost" class="field-input" formControlName="hostId" (change)="onHostChange($event)">
-              <option value="">Choose a host</option>
-              @for (host of hosts(); track host.id) {
-                <option [value]="host.id" [disabled]="!host.voice">{{ hostLabel(host) }}</option>
+            <label class="field-label" for="scriptHost1">Host one</label>
+            <select id="scriptHost1" class="field-input" (change)="onHost1Change($event)">
+              <option value="" [selected]="!host1Id()">Choose a host</option>
+              @for (host of voicedHosts(); track host.id) {
+                <option [value]="host.id" [selected]="host.id === host1Id()">{{ hostLabel(host) }}</option>
               }
             </select>
-            @if (form.controls.hostId.invalid && form.controls.hostId.touched) {
-              <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">Choose the host who will read this segment.</p>
-            }
+          </div>
+          <div>
+            <label class="field-label" for="scriptHost2">Host two <span class="font-normal text-stone-400">(optional)</span></label>
+            <select id="scriptHost2" class="field-input" (change)="onHost2Change($event)">
+              <option value="" [selected]="!host2Id()">Solo segment</option>
+              @for (host of voicedHosts(); track host.id) {
+                <option [value]="host.id" [selected]="host.id === host2Id()" [disabled]="host.id === host1Id()">{{ hostLabel(host) }}</option>
+              }
+            </select>
+            <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">Add a second host to make it a conversation. More hosts will come with paid plans.</p>
           </div>
         </div>
 
@@ -152,62 +125,66 @@
           <div class="grid gap-2 sm:grid-cols-2">
             <button type="button" [class]="mode() === 'text' ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 p-3 text-left ring-1 ring-brand-500/20' : 'rounded-2xl border border-stone-300/80 bg-white/50 p-3 text-left transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30'" (click)="setMode('text')">
               <span class="block text-sm font-semibold text-ink-900 dark:text-white">Use my text</span>
-              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Paste the text you want the host to deliver. Add research if you want it checked and enriched.</span>
+              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Give each host their own notes. The AI turns them into one natural conversation.</span>
             </button>
             <button type="button" [class]="mode() === 'guideline' ? 'rounded-2xl border border-brand-500/60 bg-brand-500/10 p-3 text-left ring-1 ring-brand-500/20' : 'rounded-2xl border border-stone-300/80 bg-white/50 p-3 text-left transition-colors hover:border-brand-400/50 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30'" (click)="setMode('guideline')">
               <span class="block text-sm font-semibold text-ink-900 dark:text-white">Give the AI a topic</span>
-              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Describe the segment. Research is included automatically, then Qwen writes the full script.</span>
+              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Describe the segment. Research is included automatically and Qwen writes the full conversation.</span>
             </button>
           </div>
         </div>
 
         @if (mode() === 'text') {
+          <div class="mt-5 grid gap-5" [class.lg:grid-cols-2]="host2()">
+            @if (host1(); as firstHost) {
+              <div>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <label class="field-label mb-0" [for]="'host1Text'">Notes for {{ firstHost.name }}</label>
+                  <span class="text-[0.68rem] font-semibold text-stone-500 dark:text-stone-500">{{ countWords(host1Text()) }} words</span>
+                </div>
+                <textarea id="host1Text" class="field-input mt-2 min-h-40 resize-y" maxlength="20000" placeholder="What should {{ firstHost.name }} bring to the conversation?" [value]="host1Text()" (input)="onHost1TextInput($event)"></textarea>
+              </div>
+            }
+            @if (host2(); as secondHost) {
+              <div>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <label class="field-label mb-0" [for]="'host2Text'">Notes for {{ secondHost.name }}</label>
+                  <span class="text-[0.68rem] font-semibold text-stone-500 dark:text-stone-500">{{ countWords(host2Text()) }} words</span>
+                </div>
+                <textarea id="host2Text" class="field-input mt-2 min-h-40 resize-y" maxlength="20000" placeholder="What should {{ secondHost.name }} add?" [value]="host2Text()" (input)="onHost2TextInput($event)"></textarea>
+              </div>
+            }
+          </div>
+
           <label class="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-stone-200/80 bg-white/40 p-4 text-sm dark:border-white/10 dark:bg-white/[0.03]">
-            <input type="checkbox" formControlName="research" class="mt-0.5 h-4 w-4 rounded border-stone-300 accent-brand-600" />
+            <input type="checkbox" class="mt-0.5 h-4 w-4 rounded border-stone-300 accent-brand-600" [checked]="research()" (change)="onResearchChange($event)" />
             <span>
               <span class="block font-semibold text-ink-900 dark:text-white">Research this topic</span>
-              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Poirot researches the subject and the draft merges those findings with your text.</span>
+              <span class="mt-1 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">Poirot researches the subject and the draft merges those findings with both hosts' notes.</span>
             </span>
           </label>
         } @else {
-          <div class="mt-5 rounded-2xl border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-xs leading-relaxed text-brand-800 dark:text-brand-200">
-            Poirot research is included automatically for AI-written topics.
+          <div class="mt-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label class="field-label mb-0" for="scriptGuideline">Topic guideline</label>
+              <span class="text-[0.68rem] font-semibold" [class.text-red-600]="sourceWordCount() > limits().maxWords" [class.text-stone-500]="sourceWordCount() <= limits().maxWords">{{ sourceWordCount() }} / {{ limits().maxWords }} words</span>
+            </div>
+            <textarea id="scriptGuideline" class="field-input mt-2 min-h-40 resize-y" maxlength="8000" placeholder="For example: Talk about the result of the elections in Brazil in October 2026…" [value]="guideline()" (input)="onGuidelineInput($event)"></textarea>
+            <p class="mt-2 text-xs leading-relaxed text-brand-800 dark:text-brand-200">Poirot research is included automatically. Qwen will shape it into a conversation for {{ selectedHosts().length === 2 ? 'both hosts' : 'the host' }}.</p>
           </div>
         }
 
-        <div class="mt-5">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <label class="field-label mb-0" for="scriptSource">{{ mode() === 'text' ? 'Your text' : 'Topic guideline' }}</label>
-            <span class="text-[0.68rem] font-semibold" [class.text-red-600]="mode() === 'text' && sourceWordCount() > limits().maxWords" [class.text-stone-500]="mode() !== 'text' || sourceWordCount() <= limits().maxWords">
-              {{ sourceWordCount() }} / {{ limits().maxWords }} words
-            </span>
-          </div>
-          <textarea id="scriptSource" class="field-input mt-2 min-h-44 resize-y" formControlName="text" maxlength="20000" [placeholder]="mode() === 'text' ? 'Paste the article, notes, or text the host should deliver…' : 'For example: Talk about the result of the elections in Brazil in October 2026…'"></textarea>
-          @if (form.controls.text.invalid && form.controls.text.touched) {
-            <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">Write at least 10 characters.</p>
-          } @else if (mode() === 'text' && sourceWordCount() > limits().maxWords) {
-            <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">That text is longer than the 10-minute limit. Shorten it to {{ limits().maxWords }} words or fewer.</p>
-          } @else {
-            <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">The AI will rewrite this into a natural spoken radio script. Keep the final segment under 10 minutes.</p>
-          }
-        </div>
-
         <div class="mt-6 flex flex-col gap-3 border-t border-stone-200/80 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
           <p class="max-w-md text-xs leading-relaxed text-stone-500 dark:text-stone-500">
-            Research and writing can take a few minutes. You will review the draft before any audio is generated.
+            Research and writing can take a few minutes. You will review every spoken turn before any audio is generated.
           </p>
-          <button type="submit" class="btn-primary shrink-0" [disabled]="creatingDraft() || !selectedHost()?.voice">
+          <button type="submit" class="btn-primary shrink-0" [disabled]="creatingDraft() || !host1()?.voice">
             @if (creatingDraft()) {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-4 w-4 animate-spin">
-                <path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" />
-              </svg>
-              {{ mode() === 'guideline' || form.controls.research.value ? 'Researching & writing…' : 'Writing draft…' }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-4 w-4 animate-spin"><path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" /></svg>
+              {{ mode() === 'guideline' || research() ? 'Researching & writing…' : 'Writing draft…' }}
             } @else {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-              </svg>
-              {{ mode() === 'guideline' || form.controls.research.value ? 'Research & write draft' : 'Write draft' }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+              {{ mode() === 'guideline' || research() ? 'Research & write conversation' : 'Write conversation' }}
             }
           </button>
         </div>
@@ -218,39 +195,24 @@
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p class="eyebrow">Review draft</p>
-              <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">
-                {{ currentDraft.title }}
-              </h2>
+              <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">{{ currentDraft.title }}</h2>
               <div class="mt-2 flex flex-wrap items-center gap-2">
-                <span [class]="statusPillClass(currentDraft.status)">
-                  <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                  {{ statusLabels[currentDraft.status] }}
-                </span>
-                <span class="text-xs font-semibold text-stone-500 dark:text-stone-500">
-                  {{ currentDraft.hostName }} · {{ modeLabel(currentDraft.mode) }}
-                  @if (currentDraft.research) { · researched }
-                </span>
+                <span [class]="statusPillClass(currentDraft.status)"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{{ statusLabels[currentDraft.status] }}</span>
+                <span class="text-xs font-semibold text-stone-500 dark:text-stone-500">{{ participantNames(currentDraft) }} · {{ modeLabel(currentDraft.mode) }} @if (currentDraft.research) { · researched }</span>
               </div>
             </div>
             <button type="button" class="icon-button h-9 w-9" aria-label="Close draft review" (click)="closeDraft()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="h-4 w-4">
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="h-4 w-4"><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>
           </div>
 
           @if (draftError()) {
-            <div class="mt-5 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">
-              {{ draftError() }}
-            </div>
+            <div class="mt-5 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ draftError() }}</div>
           }
 
           @if (currentDraft.researchBrief) {
             <details class="mt-5 rounded-2xl border border-stone-200/80 bg-white/40 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-              <summary class="cursor-pointer text-sm font-semibold text-ink-900 dark:text-white">
-                Research brief
-                <span class="ml-1 font-normal text-stone-500 dark:text-stone-500">({{ currentDraft.researchSources.length }} sources)</span>
-              </summary>
+              <summary class="cursor-pointer text-sm font-semibold text-ink-900 dark:text-white">Research brief <span class="ml-1 font-normal text-stone-500 dark:text-stone-500">({{ currentDraft.researchSources.length }} sources)</span></summary>
               <p class="mt-3 whitespace-pre-line text-xs leading-relaxed text-stone-600 dark:text-stone-400">{{ currentDraft.researchBrief }}</p>
               @if (currentDraft.researchSources.length > 0) {
                 <ul class="mt-3 space-y-1">
@@ -276,29 +238,33 @@
 
           <div class="mt-5">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <label class="field-label mb-0" for="draftScript">Spoken script</label>
-              <span class="text-[0.68rem] font-semibold" [class.text-red-600]="draftTooLong()" [class.text-stone-500]="!draftTooLong()">
-                {{ draftWordCount() }} / {{ limits().maxWords }} words
-              </span>
+              <span class="field-label mb-0">Spoken turns</span>
+              <span class="text-[0.68rem] font-semibold" [class.text-red-600]="draftTooLong()" [class.text-stone-500]="!draftTooLong()">{{ draftWordCount() }} / {{ limits().maxWords }} words</span>
             </div>
-            <textarea id="draftScript" class="field-input mt-2 min-h-72 resize-y font-mono text-sm leading-relaxed" [value]="draftText()" [readOnly]="currentDraft.status !== 'draft'" (input)="onDraftTextInput($event)"></textarea>
+            <div class="mt-3 space-y-3">
+              @for (turn of draftTurns(); track $index) {
+                <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="chip chip--small">{{ turn.hostName }}</span>
+                    <span class="text-[0.65rem] font-semibold text-stone-500 dark:text-stone-500">{{ countWords(turn.text) }} words</span>
+                  </div>
+                  <textarea class="field-input mt-2 min-h-24 resize-y" [value]="turn.text" [readOnly]="currentDraft.status !== 'draft'" (input)="onTurnTextInput($index, $event)"></textarea>
+                </div>
+              }
+            </div>
             @if (draftTooLong()) {
-              <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">This script is too long for the 10-minute limit. Shorten it before approving.</p>
+              <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-400">This conversation is too long for the 10-minute limit. Shorten it before approving.</p>
             } @else {
-              <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">This is exactly what the host voice will say. Edit anything that does not sound right.</p>
+              <p class="mt-2 text-xs text-stone-500 dark:text-stone-500">Each turn is spoken by its host in order, with a short pause between turns. Nothing overlaps.</p>
             }
           </div>
 
           <div class="mt-6 flex flex-col gap-3 border-t border-stone-200/80 pt-5 sm:flex-row sm:items-center sm:justify-end dark:border-white/5">
             @if (currentDraft.status === 'draft') {
-              <button type="button" class="btn-secondary" [disabled]="savingDraft() || approving()" (click)="saveDraft()">
-                @if (savingDraft()) { Saving… } @else { Save draft }
-              </button>
+              <button type="button" class="btn-secondary" [disabled]="savingDraft() || approving()" (click)="saveDraft()">@if (savingDraft()) { Saving… } @else { Save draft }</button>
               <button type="button" class="btn-primary" [disabled]="approving() || savingDraft() || draftTooLong()" (click)="approveDraft()">
                 @if (approving()) {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-4 w-4 animate-spin">
-                    <path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" />
-                  </svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-4 w-4 animate-spin"><path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" /></svg>
                   Queueing audio…
                 } @else {
                   Approve &amp; queue audio
@@ -315,45 +281,28 @@
         <div class="flex flex-wrap items-end justify-between gap-4 border-t border-stone-200/70 pt-8 dark:border-white/5">
           <div>
             <p class="eyebrow">On the air</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl dark:text-white">
-              Host scripts
-            </h2>
-            <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">
-              {{ pagination().total }} {{ pagination().total === 1 ? 'script' : 'scripts' }} for {{ current.name }}.
-            </p>
+            <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl dark:text-white">Host scripts</h2>
+            <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">{{ pagination().total }} {{ pagination().total === 1 ? 'script' : 'scripts' }} for {{ current.name }}.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             @if (hasPending()) {
-              <span class="chip chip--small">
-                <span class="live-dot h-1.5 w-1.5 rounded-full bg-brand-500"></span>
-                Voice studio working
-              </span>
+              <span class="chip chip--small"><span class="live-dot h-1.5 w-1.5 rounded-full bg-brand-500"></span>Voice studio working</span>
             }
-            <button type="button" class="btn-secondary px-3 py-2 text-xs" [disabled]="refreshing()" (click)="refresh()">
-              @if (refreshing()) { Refreshing… } @else { Refresh }
-            </button>
+            <button type="button" class="btn-secondary px-3 py-2 text-xs" [disabled]="refreshing()" (click)="refresh()">@if (refreshing()) { Refreshing… } @else { Refresh }</button>
           </div>
         </div>
 
         @if (playerError()) {
-          <div class="mt-5 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">
-            {{ playerError() }}
-          </div>
+          <div class="mt-5 flex items-start gap-2.5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ playerError() }}</div>
         }
 
         @if (scripts().length === 0) {
           <div class="surface-card mt-5 flex flex-col items-center px-6 py-12 text-center">
             <span class="flex h-14 w-14 items-center justify-center rounded-3xl border border-brand-500/25 bg-brand-500/10 text-brand-600 dark:text-brand-300">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-6 w-6">
-                <path d="M4 9v6h3l5 4V5L7 9Z" />
-                <path d="M16 8.5a5 5 0 0 1 0 7" />
-                <path d="M19 6a8.5 8.5 0 0 1 0 12" />
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-6 w-6"><path d="M4 9v6h3l5 4V5L7 9Z" /><path d="M16 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></svg>
             </span>
             <h3 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">Nothing on the desk yet</h3>
-            <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-              Create your first host script above. You will review the text before the voice studio makes the audio.
-            </p>
+            <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">Create your first host script above. You will review the text before the voice studio makes the audio.</p>
           </div>
         } @else {
           <div class="mt-5 grid gap-4 sm:grid-cols-2">
@@ -361,15 +310,9 @@
               <article class="surface-card flex flex-col p-4 sm:p-5">
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <span [class]="statusPillClass(script.status)">
-                      <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                      {{ statusLabels[script.status] }}
-                    </span>
+                    <span [class]="statusPillClass(script.status)"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{{ statusLabels[script.status] }}</span>
                     <h3 class="mt-2 break-words font-display text-lg font-semibold tracking-tight text-ink-900 dark:text-white">{{ script.title }}</h3>
-                    <p class="mt-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-500">
-                      {{ script.hostName }} · {{ modeLabel(script.mode) }}
-                      @if (script.research) { · researched }
-                    </p>
+                    <p class="mt-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-500">{{ participantNames(script) }} · {{ modeLabel(script.mode) }} @if (script.research) { · researched }</p>
                   </div>
 
                   @if (script.status === 'completed' && script.hasAudio) {
@@ -397,6 +340,7 @@
 
                 <div class="mt-3 flex flex-wrap gap-1.5">
                   <span class="chip chip--small">{{ script.wordCount }} words</span>
+                  <span class="chip chip--small">{{ script.turns.length }} turns</span>
                   @if (script.durationSeconds) {
                     <span class="chip chip--small">{{ formatTime(script.durationSeconds) }}</span>
                   }

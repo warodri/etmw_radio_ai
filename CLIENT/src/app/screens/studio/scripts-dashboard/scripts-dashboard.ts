@@ -7,7 +7,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -20,6 +19,7 @@ import {
   ScriptMode,
   ScriptPagination,
   ScriptStatus,
+  ScriptTurn,
   ScriptView,
 } from '../../../core/models/script.models';
 import { apiErrorMessage } from '../../../core/services/auth.service';
@@ -33,13 +33,12 @@ const PAGE_SIZE = 6;
 
 @Component({
   selector: 'app-scripts-dashboard',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, RouterLink],
   templateUrl: './scripts-dashboard.html',
   styleUrl: './scripts-dashboard.scss',
 })
 export class ScriptsDashboard implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
-  private readonly fb = inject(FormBuilder);
   private readonly creator = inject(CreatorService);
   private readonly stations = inject(StationService);
 
@@ -63,8 +62,9 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
     totalPages: 1,
   });
   protected readonly limits = signal<ScriptLimits>({
-    maxWords: 1600,
+    maxWords: 1300,
     maxDurationSeconds: 600,
+    maxHosts: 2,
   });
   protected readonly loading = signal(true);
   protected readonly refreshing = signal(false);
@@ -72,12 +72,18 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
   protected readonly notice = signal<string | null>(null);
   protected readonly creatingDraft = signal(false);
   protected readonly formError = signal<string | null>(null);
-  protected readonly selectedHostId = signal('');
+  protected readonly title = signal('');
   protected readonly mode = signal<ScriptMode>('text');
+  protected readonly research = signal(false);
+  protected readonly host1Id = signal('');
+  protected readonly host2Id = signal('');
+  protected readonly host1Text = signal('');
+  protected readonly host2Text = signal('');
+  protected readonly guideline = signal('');
   protected readonly page = signal(1);
 
   protected readonly draft = signal<ScriptView | null>(null);
-  protected readonly draftText = signal('');
+  protected readonly draftTurns = signal<ScriptTurn[]>([]);
   protected readonly draftTitle = signal('');
   protected readonly draftDirty = signal(false);
   protected readonly draftError = signal<string | null>(null);
@@ -91,38 +97,43 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
   protected readonly currentTime = signal(0);
   protected readonly audioDuration = signal(0);
 
-  protected readonly form = this.fb.nonNullable.group({
-    title: ['', [Validators.maxLength(120)]],
-    hostId: ['', [Validators.required]],
-    mode: this.fb.nonNullable.control<ScriptMode>('text'),
-    text: [
-      '',
-      [
-        Validators.required,
-        Validators.minLength(10),
-        Validators.maxLength(20000),
-      ],
-    ],
-    research: [false],
-  });
-
-  protected readonly selectedHost = computed(
-    () =>
-      this.hosts().find((host) => host.id === this.selectedHostId()) ?? null,
-  );
   protected readonly voicedHosts = computed(() =>
     this.hosts().filter((host) => Boolean(host.voice)),
+  );
+  protected readonly host1 = computed(
+    () => this.hosts().find((host) => host.id === this.host1Id()) ?? null,
+  );
+  protected readonly host2 = computed(
+    () => this.hosts().find((host) => host.id === this.host2Id()) ?? null,
+  );
+  protected readonly selectedHosts = computed(() =>
+    [this.host1(), this.host2()].filter(
+      (host): host is HostPersona => host !== null,
+    ),
+  );
+  protected readonly sourceWordCount = computed(() => {
+    if (this.mode() === 'guideline') {
+      return this.countWords(this.guideline());
+    }
+
+    return (
+      this.countWords(this.host1Text()) +
+      (this.host2Id() ? this.countWords(this.host2Text()) : 0)
+    );
+  });
+  protected readonly draftWordCount = computed(() =>
+    this.draftTurns().reduce(
+      (total, turn) => total + this.countWords(turn.text),
+      0,
+    ),
+  );
+  protected readonly draftTooLong = computed(
+    () => this.draftWordCount() > this.limits().maxWords,
   );
   protected readonly hasPending = computed(() =>
     this.scripts().some(
       (script) => script.status === 'queued' || script.status === 'generating',
     ),
-  );
-  protected readonly draftWordCount = computed(() =>
-    this.countWords(this.draftText()),
-  );
-  protected readonly draftTooLong = computed(
-    () => this.draftWordCount() > this.limits().maxWords,
   );
 
   constructor() {
@@ -168,10 +179,12 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
         this.station.set(hosts.station);
         this.hosts.set(hosts.hosts);
         this.applyScripts(scripts.scripts, scripts.pagination, scripts.limits);
-        const firstVoiced = hosts.hosts.find((host) => host.voice);
-        if (firstVoiced) {
-          this.form.patchValue({ hostId: firstVoiced.id });
-          this.selectedHostId.set(firstVoiced.id);
+        const voiced = hosts.hosts.filter((host) => host.voice);
+        if (voiced[0]) {
+          this.host1Id.set(voiced[0].id);
+        }
+        if (voiced[1]) {
+          this.host2Id.set(voiced[1].id);
         }
         this.loading.set(false);
       },
@@ -199,25 +212,53 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
     return this.stations.artworkUrl(station) ?? this.defaultArtwork;
   }
 
-  protected onHostChange(event: Event): void {
+  protected onTitleInput(event: Event): void {
+    this.title.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onHost1Change(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    this.selectedHostId.set(value);
-    this.form.controls.hostId.setValue(value);
+    this.host1Id.set(value);
+    if (this.host2Id() === value) {
+      this.host2Id.set('');
+    }
     this.formError.set(null);
+  }
+
+  protected onHost2Change(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    if (value && value === this.host1Id()) {
+      this.formError.set('Choose a different second host.');
+      this.host2Id.set('');
+      return;
+    }
+    this.host2Id.set(value);
+    this.formError.set(null);
+  }
+
+  protected onHost1TextInput(event: Event): void {
+    this.host1Text.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected onHost2TextInput(event: Event): void {
+    this.host2Text.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected onGuidelineInput(event: Event): void {
+    this.guideline.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected onResearchChange(event: Event): void {
+    this.research.set((event.target as HTMLInputElement).checked);
   }
 
   protected setMode(mode: ScriptMode): void {
     this.mode.set(mode);
-    this.form.controls.mode.setValue(mode);
     this.formError.set(null);
   }
 
   protected countWords(value: string): number {
     return value.trim().split(/\s+/).filter(Boolean).length;
-  }
-
-  protected sourceWordCount(): number {
-    return this.countWords(this.form.controls.text.value);
   }
 
   protected hostLabel(host: HostPersona): string {
@@ -226,41 +267,67 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
       : `${host.name} — no voice assigned`;
   }
 
+  protected participantNames(script: ScriptView): string {
+    return script.participants.map((participant) => participant.name).join(' & ');
+  }
+
   protected createDraft(): void {
     this.formError.set(null);
     this.notice.set(null);
-    this.form.markAllAsTouched();
 
-    const host = this.selectedHost();
+    const hosts = this.selectedHosts();
 
-    if (!host?.voice) {
-      this.formError.set('Choose a host with an assigned voice.');
+    if (hosts.length === 0) {
+      this.formError.set('Choose at least one host with an assigned voice.');
       return;
     }
 
-    if (this.form.invalid) {
-      this.formError.set('Check the highlighted fields and try again.');
+    if (hosts.length > this.limits().maxHosts) {
+      this.formError.set(`Choose up to ${this.limits().maxHosts} hosts for now.`);
       return;
     }
 
-    if (
-      this.mode() === 'text' &&
-      this.sourceWordCount() > this.limits().maxWords
-    ) {
-      this.formError.set(
-        `That text is too long for the 10-minute limit. Shorten it to ${this.limits().maxWords} words or fewer.`,
-      );
-      return;
-    }
-
-    const values = this.form.getRawValue();
     const payload: CreateScriptDraftPayload = {
-      hostId: host.id,
-      title: values.title.trim() || undefined,
+      participants: hosts.map((host) => host.id),
+      title: this.title().trim() || undefined,
       mode: this.mode(),
-      text: values.text.trim(),
-      research: this.mode() === 'guideline' ? true : values.research,
+      research: this.mode() === 'guideline' ? true : this.research(),
     };
+
+    if (this.mode() === 'text') {
+      const texts = hosts.map((host) => ({
+        hostId: host.id,
+        text: (host.id === this.host1Id()
+          ? this.host1Text()
+          : this.host2Text()
+        ).trim(),
+      }));
+
+      if (texts.some((source) => source.text.length < 10)) {
+        this.formError.set('Write at least a few words of notes for each host.');
+        return;
+      }
+
+      const words = texts.reduce(
+        (total, source) => total + this.countWords(source.text),
+        0,
+      );
+      if (words > this.limits().maxWords) {
+        this.formError.set(
+          `The notes are too long for the 10-minute limit. Shorten them to ${this.limits().maxWords} words or fewer.`,
+        );
+        return;
+      }
+
+      payload.texts = texts;
+    } else {
+      if (this.guideline().trim().length < 10) {
+        this.formError.set('Write at least a few words about the topic.');
+        return;
+      }
+
+      payload.guideline = this.guideline().trim();
+    }
 
     this.creatingDraft.set(true);
 
@@ -269,7 +336,7 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
         this.creatingDraft.set(false);
         this.setDraft(response.script);
         this.notice.set(
-          'Draft ready. Review the text, edit it if needed, then approve it for audio.',
+          'Draft ready. Review the conversation, edit any turn, then approve it for audio.',
         );
         this.loadScripts(1, true);
         this.scrollToDraft();
@@ -289,14 +356,19 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
 
   protected closeDraft(): void {
     this.draft.set(null);
-    this.draftText.set('');
+    this.draftTurns.set([]);
     this.draftTitle.set('');
     this.draftDirty.set(false);
     this.draftError.set(null);
   }
 
-  protected onDraftTextInput(event: Event): void {
-    this.draftText.set((event.target as HTMLTextAreaElement).value);
+  protected onTurnTextInput(index: number, event: Event): void {
+    const text = (event.target as HTMLTextAreaElement).value;
+    this.draftTurns.update((turns) =>
+      turns.map((turn, turnIndex) =>
+        turnIndex === index ? { ...turn, text } : turn,
+      ),
+    );
     this.draftDirty.set(true);
   }
 
@@ -312,13 +384,20 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
       return;
     }
 
+    const turns = this.turnsPayload();
+
+    if (turns.length === 0) {
+      this.draftError.set('The conversation needs at least one spoken turn.');
+      return;
+    }
+
     this.draftError.set(null);
     this.savingDraft.set(true);
 
     this.creator
       .updateScriptDraft(this.slug, draft.id, {
         title: this.draftTitle().trim() || draft.title,
-        scriptText: this.draftText().trim(),
+        turns,
       })
       .subscribe({
         next: (response) => {
@@ -345,23 +424,33 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
 
     if (this.draftTooLong()) {
       this.draftError.set(
-        `The script is too long for the 10-minute limit. Shorten it to ${this.limits().maxWords} words or fewer.`,
+        `The conversation is too long for the 10-minute limit. Shorten it to ${this.limits().maxWords} words or fewer.`,
       );
       return;
     }
 
+    const turns = this.turnsPayload();
+
+    if (turns.length === 0) {
+      this.draftError.set('The conversation needs at least one spoken turn.');
+      return;
+    }
+
     const title = this.draftTitle().trim() || draft.title;
-    const scriptText = this.draftText().trim();
     const needsUpdate =
-      title !== draft.title || scriptText !== draft.scriptText;
+      title !== draft.title ||
+      JSON.stringify(turns) !==
+        JSON.stringify(
+          draft.turns.map((turn) => ({
+            hostId: turn.hostId,
+            text: turn.text,
+          })),
+        );
 
     this.approving.set(true);
 
     const update$ = needsUpdate
-      ? this.creator.updateScriptDraft(this.slug, draft.id, {
-          title,
-          scriptText,
-        })
+      ? this.creator.updateScriptDraft(this.slug, draft.id, { title, turns })
       : of({ script: draft });
 
     update$
@@ -371,7 +460,7 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
           this.approving.set(false);
           this.setDraft(response.script);
           this.notice.set(
-            'Approved. The host audio is now queued for generation.',
+            'Approved. The conversation is now queued for voice generation.',
           );
           this.replaceScript(response.script);
           this.loadScripts(this.page(), true);
@@ -392,7 +481,7 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
         if (this.draft()?.id === response.script.id) {
           this.setDraft(response.script);
         }
-        this.notice.set('The script audio is queued for another attempt.');
+        this.notice.set('The conversation audio is queued for another attempt.');
         this.loadScripts(this.page(), true);
       },
       error: (error: unknown) => {
@@ -496,6 +585,12 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
 
+  private turnsPayload(): { hostId: string; text: string }[] {
+    return this.draftTurns()
+      .map((turn) => ({ hostId: turn.hostId, text: turn.text.trim() }))
+      .filter((turn) => turn.text.length > 0);
+  }
+
   private applyScripts(
     scripts: ScriptView[],
     pagination: ScriptPagination,
@@ -521,21 +616,25 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
       return;
     }
 
-    this.draft.set({
-      ...fresh,
-      title: this.draftDirty() ? current.title : fresh.title,
-      scriptText: this.draftDirty() ? current.scriptText : fresh.scriptText,
-    });
-
     if (!this.draftDirty()) {
-      this.draftText.set(fresh.scriptText);
+      this.draftTurns.set(fresh.turns.map((turn) => ({ ...turn })));
       this.draftTitle.set(fresh.title);
     }
+
+    this.draft.set(
+      this.draftDirty()
+        ? {
+            ...fresh,
+            title: current.title,
+            turns: this.draftTurns(),
+          }
+        : fresh,
+    );
   }
 
   private setDraft(script: ScriptView): void {
     this.draft.set(script);
-    this.draftText.set(script.scriptText);
+    this.draftTurns.set(script.turns.map((turn) => ({ ...turn })));
     this.draftTitle.set(script.title);
     this.draftDirty.set(false);
     this.draftError.set(null);

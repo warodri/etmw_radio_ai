@@ -19,6 +19,22 @@ export interface ScriptSource {
   url: string;
 }
 
+export interface ScriptParticipant {
+  hostId: ObjectId;
+  hostName: string;
+}
+
+export interface ScriptTurn {
+  hostId: ObjectId;
+  hostName: string;
+  text: string;
+}
+
+export interface ScriptTextSource {
+  hostId: ObjectId;
+  text: string;
+}
+
 export interface ScriptAudio {
   mimeType: string;
   data?: Buffer;
@@ -28,17 +44,17 @@ export interface ScriptDocument {
   _id?: ObjectId;
   stationId: ObjectId;
   ownerId: ObjectId;
-  hostId: ObjectId;
-  hostName: string;
-  language: string;
-  title: string;
+  participants: ScriptParticipant[];
   mode: ScriptMode;
   research: boolean;
-  sourceText: string;
+  sourceTexts: ScriptTextSource[];
+  guideline: string | null;
   researchBrief: string | null;
   researchSources: ScriptSource[];
-  scriptText: string;
+  turns: ScriptTurn[];
   wordCount: number;
+  language: string;
+  title: string;
   status: ScriptStatus;
   error: string | null;
   durationSeconds: number | null;
@@ -47,18 +63,32 @@ export interface ScriptDocument {
   updatedAt: Date;
   approvedAt: Date | null;
   completedAt: Date | null;
+  hostId?: ObjectId;
+  hostName?: string;
+  scriptText?: string;
+  sourceText?: string;
+}
+
+export interface ScriptParticipantView {
+  id: string;
+  name: string;
+}
+
+export interface ScriptTurnView {
+  hostId: string;
+  hostName: string;
+  text: string;
 }
 
 export interface ScriptView {
   id: string;
-  hostId: string;
-  hostName: string;
+  participants: ScriptParticipantView[];
+  turns: ScriptTurnView[];
   title: string;
   mode: ScriptMode;
   research: boolean;
   researchBrief: string | null;
   researchSources: ScriptSource[];
-  scriptText: string;
   wordCount: number;
   status: ScriptStatus;
   error: string | null;
@@ -73,17 +103,49 @@ export interface ScriptView {
 export function toScriptView(
   script: ScriptDocument & { _id: ObjectId },
 ): ScriptView {
+  const participants =
+    script.participants?.length > 0
+      ? script.participants
+      : script.hostId && script.hostName
+        ? [{ hostId: script.hostId, hostName: script.hostName }]
+        : [];
+  const turns =
+    script.turns?.length > 0
+      ? script.turns
+      : script.scriptText && participants.length > 0
+        ? [
+            {
+              hostId: participants[0].hostId,
+              hostName: participants[0].hostName,
+              text: script.scriptText,
+            },
+          ]
+        : [];
+  const wordCount =
+    script.wordCount ??
+    turns.reduce(
+      (total, turn) =>
+        total + turn.text.trim().split(/\s+/).filter(Boolean).length,
+      0,
+    );
+
   return {
     id: script._id.toHexString(),
-    hostId: script.hostId.toHexString(),
-    hostName: script.hostName,
+    participants: participants.map((participant) => ({
+      id: participant.hostId.toHexString(),
+      name: participant.hostName,
+    })),
+    turns: turns.map((turn) => ({
+      hostId: turn.hostId.toHexString(),
+      hostName: turn.hostName,
+      text: turn.text,
+    })),
     title: script.title,
     mode: script.mode,
     research: script.research,
     researchBrief: script.researchBrief,
     researchSources: script.researchSources,
-    scriptText: script.scriptText,
-    wordCount: script.wordCount,
+    wordCount,
     status: script.status,
     error: script.error,
     durationSeconds: script.durationSeconds,
@@ -105,6 +167,7 @@ export interface ScriptPagination {
 export interface ScriptLimits {
   maxWords: number;
   maxDurationSeconds: number;
+  maxHosts: number;
 }
 
 export interface ScriptListResult {

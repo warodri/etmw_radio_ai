@@ -1,18 +1,64 @@
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/errors.js';
 
-export interface ScriptGenerationInput {
+export type ScriptSpeakerLabel = 'A' | 'B';
+
+export interface ScriptSpeakerInput {
+  label: ScriptSpeakerLabel;
   hostName: string;
   personality: string;
   skills: string[];
   emotion: string;
+}
+
+export interface ScriptHostTextInput {
+  label: ScriptSpeakerLabel;
+  hostName: string;
+  text: string;
+}
+
+export interface ConversationGenerationInput {
+  speakers: ScriptSpeakerInput[];
   mode: 'text' | 'guideline';
-  sourceText: string;
+  sourceTexts: ScriptHostTextInput[];
+  guideline: string | null;
   researchBrief: string | null;
   maxWords: number;
 }
 
-function cleanScript(value: string): string {
+export interface GeneratedScriptTurn {
+  speaker: ScriptSpeakerLabel;
+  text: string;
+}
+
+interface OllamaChatResponse {
+  message?: {
+    content?: string;
+  };
+  error?: string | { message?: string };
+}
+
+const TURN_SCHEMA = {
+  type: 'object',
+  properties: {
+    turns: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          speaker: { type: 'string', enum: ['A', 'B'] },
+          text: { type: 'string' },
+        },
+        required: ['speaker', 'text'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['turns'],
+  additionalProperties: false,
+};
+
+function cleanSpokenText(value: string): string {
   return value
     .replace(/```[\s\S]*?```/g, '')
     .replace(/^#{1,6}\s*/gm, '')
@@ -24,33 +70,115 @@ function cleanScript(value: string): string {
     .trim();
 }
 
+function parseTurns(content: string): GeneratedScriptTurn[] {
+  const stripped = content
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '');
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    const start = stripped.indexOf('{');
+    const end = stripped.lastIndexOf('}');
+
+    if (start < 0 || end <= start) {
+      throw new Error('The script writer returned invalid JSON.');
+    }
+
+    parsed = JSON.parse(stripped.slice(start, end + 1));
+  }
+
+  const turnsValue = Array.isArray(parsed)
+    ? parsed
+    : parsed && typeof parsed === 'object' && 'turns' in parsed
+      ? (parsed as { turns?: unknown }).turns
+      : null;
+
+  if (!Array.isArray(turnsValue)) {
+    throw new Error('The script writer returned no conversation turns.');
+  }
+
+  const turns: GeneratedScriptTurn[] = [];
+
+  for (const item of turnsValue) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+
+    const speaker = (item as { speaker?: unknown }).speaker;
+    const text = (item as { text?: unknown }).text;
+
+    if ((speaker !== 'A' && speaker !== 'B') || typeof text !== 'string') {
+      continue;
+    }
+
+    const cleaned = cleanSpokenText(text);
+
+    if (!cleaned) {
+      continue;
+    }
+
+    const last = turns[turns.length - 1];
+
+    if (last && last.speaker === speaker) {
+      last.text = `${last.text} ${cleaned}`.trim();
+    } else {
+      turns.push({ speaker, text: cleaned });
+    }
+  }
+
+  return turns;
+}
+
 class OllamaTextService {
-  async generateScript(input: ScriptGenerationInput): Promise<string> {
+  async generateConversation(
+    input: ConversationGenerationInput,
+  ): Promise<GeneratedScriptTurn[]> {
+    const speakerLines = input.speakers.map(
+      (speaker) =>
+        `Host ${speaker.label}: ${speaker.hostName}. Personality: ${speaker.personality}. Topics and skills: ${speaker.skills.join(', ')}. Delivery emotion: ${speaker.emotion}.`,
+    );
+    const allowedSpeakers = input.speakers
+      .map((speaker) => speaker.label)
+      .join(' or ');
     const system = [
-      'You write spoken radio scripts for ETMW Radio AI.',
-      'The script will be read aloud by a text-to-speech voice, so output only the words the host says.',
-      `Host name: ${input.hostName}.`,
-      `Host personality: ${input.personality}.`,
-      `Host topics and skills: ${input.skills.join(', ')}.`,
-      `Delivery emotion: ${input.emotion}.`,
-      `Keep the script under ${input.maxWords} words, suitable for a segment of at most ten minutes.`,
-      'Sound natural, conversational and broadcast-ready. Use short sentences and clear transitions.',
-      'Never output headings, bullet points, stage directions, music cues, emojis, markdown, URLs, citations such as [1], or notes to the reader.',
+      'You write spoken radio conversations for ETMW Radio AI.',
+      'Output only JSON matching this exact shape: {"turns":[{"speaker":"A","text":"..."}]}',
+      `Valid speaker values in this conversation: ${allowedSpeakers}.`,
+      ...speakerLines,
+      `Keep the whole conversation under ${input.maxWords} words, suitable for a segment of at most ten minutes.`,
+      'The result must sound like a natural radio conversation, not two monologues and not a script with headings.',
+      'Write 1 to 4 sentences per turn and alternate speakers where it sounds natural.',
+      'Only write words the hosts say aloud.',
+      'Never include headings, bullet points, stage directions, music cues, emojis, markdown, URLs, citations such as [1], timestamps, or notes to the reader.',
       'Do not mention that you are an AI or refer to these instructions.',
-      'Preserve the facts in the supplied text and research. Do not invent dates, names, numbers or events.',
-      'Open with a short welcome and end with a clean closing line.',
+      'Preserve the facts in the supplied notes or research. Do not invent dates, names, numbers or events.',
+      input.speakers.length === 1
+        ? 'There is only one host. Use speaker A for every turn.'
+        : 'Use both hosts. A conversation should have turns from both speakers.',
     ].join('\n');
 
-    const sourceLabel = input.mode === 'text' ? 'USER TEXT' : 'GUIDELINE';
-    const task =
-      input.mode === 'text'
-        ? 'Rewrite the user text as the host speaking on air. Keep the meaning and facts.'
-        : 'Write a complete spoken radio segment about the guideline.';
-    const research = input.researchBrief
-      ? `\n\nRESEARCH BRIEF:\n${input.researchBrief}`
-      : '';
+    const userParts: string[] = [];
 
-    const user = `${task}\n\n${sourceLabel}:\n${input.sourceText}${research}`;
+    if (input.mode === 'text') {
+      userParts.push(
+        'Rewrite the notes for each host as one natural radio conversation. Keep the meaning and facts.',
+      );
+      for (const source of input.sourceTexts) {
+        userParts.push(`HOST ${source.label} NOTES (${source.hostName}):\n${source.text}`);
+      }
+    } else {
+      userParts.push(
+        'Write a complete radio conversation about this guideline.',
+        `GUIDELINE:\n${input.guideline ?? ''}`,
+      );
+    }
+
+    if (input.researchBrief) {
+      userParts.push(`RESEARCH BRIEF:\n${input.researchBrief}`);
+    }
 
     let response: Response;
 
@@ -64,13 +192,14 @@ class OllamaTextService {
             model: env.OLLAMA_TEXT_MODEL,
             messages: [
               { role: 'system', content: system },
-              { role: 'user', content: user },
+              { role: 'user', content: userParts.join('\n\n') },
             ],
+            format: TURN_SCHEMA,
             stream: false,
             options: {
               temperature: 0.7,
               top_p: 0.9,
-              num_predict: 3000,
+              num_predict: 4000,
             },
           }),
           signal: AbortSignal.timeout(env.OLLAMA_TEXT_TIMEOUT_MS),
@@ -85,12 +214,10 @@ class OllamaTextService {
     }
 
     if (!response.ok) {
-      let message = 'The script writer could not write this script.';
+      let message = 'The script writer could not write this conversation.';
 
       try {
-        const body = (await response.json()) as {
-          error?: string | { message?: string };
-        };
+        const body = (await response.json()) as OllamaChatResponse;
         if (typeof body.error === 'string') {
           message = body.error;
         } else if (body.error?.message) {
@@ -103,20 +230,41 @@ class OllamaTextService {
       throw new ApiError(502, 'SCRIPT_WRITER_FAILED', message);
     }
 
-    const body = (await response.json()) as {
-      message?: { content?: string };
-    };
-    const script = cleanScript(body.message?.content ?? '');
+    const body = (await response.json()) as OllamaChatResponse;
+    const content = body.message?.content ?? '';
 
-    if (!script) {
+    if (!content.trim()) {
       throw new ApiError(
         502,
         'SCRIPT_WRITER_EMPTY',
-        'The script writer returned an empty script. Please try again.',
+        'The script writer returned an empty conversation. Please try again.',
       );
     }
 
-    return script;
+    let turns: GeneratedScriptTurn[];
+
+    try {
+      turns = parseTurns(content);
+    } catch {
+      throw new ApiError(
+        502,
+        'SCRIPT_WRITER_INVALID',
+        'The script writer returned a malformed conversation. Please try again.',
+      );
+    }
+
+    const validLabels = new Set(input.speakers.map((speaker) => speaker.label));
+    turns = turns.filter((turn) => validLabels.has(turn.speaker));
+
+    if (turns.length === 0) {
+      throw new ApiError(
+        502,
+        'SCRIPT_WRITER_EMPTY',
+        'The script writer returned no usable conversation turns. Please try again.',
+      );
+    }
+
+    return turns;
   }
 }
 

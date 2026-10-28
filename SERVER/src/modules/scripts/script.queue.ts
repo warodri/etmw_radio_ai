@@ -9,6 +9,14 @@ import { HostRepository } from '../hosts/host.repository.js';
 import { previewTextFor } from '../hosts/voice-catalog.js';
 import { ScriptRepository } from './script.repository.js';
 
+interface ScriptBlock {
+  hostId: ObjectId;
+  hostName: string;
+  text: string;
+}
+
+const TURN_GAP_SECONDS = 0.35;
+
 class ScriptQueue {
   private readonly queue: string[] = [];
   private readonly scripts = new ScriptRepository();
@@ -71,92 +79,115 @@ class ScriptQueue {
       return;
     }
 
+    const turns =
+      script.turns?.length > 0
+        ? script.turns
+        : script.scriptText && script.hostId && script.hostName
+          ? [
+              {
+                hostId: script.hostId,
+                hostName: script.hostName,
+                text: script.scriptText,
+              },
+            ]
+          : [];
+
+    if (turns.length === 0) {
+      await this.scripts.updateById(id, {
+        status: 'failed',
+        error: 'This script has no spoken turns to render.',
+        completedAt: new Date(),
+      });
+      return;
+    }
+
     await this.scripts.updateById(id, {
       status: 'generating',
       error: null,
     });
-    logger.info('script.started', { scriptId, hostId: script.hostId.toHexString() });
+    logger.info('script.started', {
+      scriptId,
+      turns: turns.length,
+      hosts: script.participants.length,
+    });
 
     try {
-      const host = await this.hosts.findOwned(
-        script.hostId,
-        script.stationId,
-        script.ownerId,
-      );
+      const blocks: ScriptBlock[] = [];
 
-      if (!host?.voice?.name) {
-        throw new ApiError(
-          400,
-          'HOST_VOICE_MISSING',
-          'This host has no voice assigned. Assign a voice before generating audio.',
-        );
-      }
+      for (const turn of turns) {
+        const last = blocks[blocks.length - 1];
 
-      let profileId = host.voiceStudioProfileId;
-
-      if (profileId) {
-        const existing = await voiceStudio.getProfile(profileId);
-        if (!existing) {
-          profileId = null;
+        if (last && last.hostId.equals(turn.hostId)) {
+          last.text = `${last.text} ${turn.text}`.trim();
+        } else {
+          blocks.push({
+            hostId: turn.hostId,
+            hostName: turn.hostName,
+            text: turn.text,
+          });
         }
       }
 
-      if (!profileId) {
-        const referenceText = previewTextFor(host.voice.emotion, host.name);
-        const reference = await phonon.preview(
-          host.name,
-          host.voice.name,
-          host.voice.emotion,
-        );
-        const profile = await voiceStudio.createProfile({
-          name: `ETMW Host — ${host.name} — ${host.voice.name}`,
-          audio: reference.data,
-          refText: referenceText,
+      const profileIds = new Map<string, string>();
+      const wavs: Buffer[] = [];
+      let totalDuration = 0;
+
+      for (const block of blocks) {
+        const hostKey = block.hostId.toHexString();
+        let profileId = profileIds.get(hostKey);
+
+        if (!profileId) {
+          profileId = await this.ensureProfile(
+            block.hostId,
+            script.stationId,
+            script.ownerId,
+            script.language,
+          );
+          profileIds.set(hostKey, profileId);
+        }
+
+        const generated = await voiceStudio.generate({
+          profileId,
+          text: block.text,
           language: script.language,
         });
-        profileId = profile.id;
 
-        await this.hosts.updateOwned(
-          host._id,
-          script.stationId,
-          script.ownerId,
-          {
-            voiceStudioProfileId: profileId,
-            updatedAt: new Date(),
-          },
-        );
+        totalDuration += generated.durationSeconds;
+        wavs.push(generated.audio);
+
+        if (
+          totalDuration +
+            TURN_GAP_SECONDS * Math.max(0, blocks.length - 1) >
+          env.SCRIPT_MAX_DURATION_SECONDS
+        ) {
+          throw new ApiError(
+            400,
+            'SCRIPT_TOO_LONG',
+            'The generated conversation is longer than the 10-minute limit. Shorten the script and create a new draft.',
+          );
+        }
       }
 
-      const generated = await voiceStudio.generate({
-        profileId,
-        text: script.scriptText,
-        language: script.language,
-      });
-
-      if (
-        generated.durationSeconds > 0 &&
-        generated.durationSeconds > env.SCRIPT_MAX_DURATION_SECONDS
-      ) {
-        throw new ApiError(
-          400,
-          'SCRIPT_TOO_LONG',
-          'The generated audio is longer than the 10-minute limit. Shorten the script and create a new draft.',
-        );
-      }
-
-      const mp3 = await audioTranscode.wavToMp3(generated.audio);
+      const mp3 = await audioTranscode.concatWavsToMp3(
+        wavs,
+        TURN_GAP_SECONDS,
+      );
+      const durationSeconds =
+        totalDuration + TURN_GAP_SECONDS * Math.max(0, blocks.length - 1);
 
       await this.scripts.updateById(id, {
         status: 'completed',
         audio: { mimeType: 'audio/mpeg', data: mp3 },
-        durationSeconds: generated.durationSeconds || null,
+        durationSeconds,
         error: null,
         completedAt: new Date(),
       });
 
       logger.info('script.completed', {
         scriptId,
-        durationSeconds: generated.durationSeconds,
+        turns: turns.length,
+        blocks: blocks.length,
+        durationSeconds,
         bytes: mp3.length,
       });
     } catch (error) {
@@ -172,6 +203,55 @@ class ScriptQueue {
       });
       logger.error('script.failed', { scriptId, message });
     }
+  }
+
+  private async ensureProfile(
+    hostId: ObjectId,
+    stationId: ObjectId,
+    ownerId: ObjectId,
+    language: string,
+  ): Promise<string> {
+    const host = await this.hosts.findOwned(hostId, stationId, ownerId);
+
+    if (!host?.voice?.name) {
+      throw new ApiError(
+        400,
+        'HOST_VOICE_MISSING',
+        'A host in this conversation has no voice assigned.',
+      );
+    }
+
+    let profileId = host.voiceStudioProfileId;
+
+    if (profileId) {
+      const existing = await voiceStudio.getProfile(profileId);
+      if (!existing) {
+        profileId = null;
+      }
+    }
+
+    if (!profileId) {
+      const referenceText = previewTextFor(host.voice.emotion, host.name);
+      const reference = await phonon.preview(
+        host.name,
+        host.voice.name,
+        host.voice.emotion,
+      );
+      const profile = await voiceStudio.createProfile({
+        name: `ETMW Host — ${host.name} — ${host.voice.name}`,
+        audio: reference.data,
+        refText: referenceText,
+        language,
+      });
+      profileId = profile.id;
+
+      await this.hosts.updateOwned(hostId, stationId, ownerId, {
+        voiceStudioProfileId: profileId,
+        updatedAt: new Date(),
+      });
+    }
+
+    return profileId;
   }
 }
 
