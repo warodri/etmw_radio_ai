@@ -32,12 +32,21 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'studio/:slug/creator',
-    title: 'Creator dashboard · ETMW Radio AI',
+    path: 'studio/:slug/creator/songs',
+    title: 'Song studio · ETMW Radio AI',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./screens/studio/creator-dashboard/creator-dashboard').then(
         (component) => component.CreatorDashboard,
+      ),
+  },
+  {
+    path: 'studio/:slug/creator',
+    title: 'Creator dashboard · ETMW Radio AI',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./screens/studio/creator-overview/creator-overview').then(
+        (component) => component.CreatorOverview,
       ),
   },
   {
