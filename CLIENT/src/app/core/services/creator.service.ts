@@ -17,6 +17,12 @@ import {
   HostVoiceCatalogResponse,
   HostVoicePayload,
 } from '../models/host.models';
+import {
+  CreateScriptDraftPayload,
+  ScriptListResponse,
+  ScriptResponse,
+  UpdateScriptDraftPayload,
+} from '../models/script.models';
 
 @Injectable({ providedIn: 'root' })
 export class CreatorService {
@@ -120,6 +126,63 @@ export class CreatorService {
     }
 
     return `${API_BASE_URL}${host.avatarUrl}`;
+  }
+
+  getScripts(
+    slug: string,
+    page: number,
+    pageSize: number,
+  ): Observable<ScriptListResponse> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ScriptListResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts`,
+      { params },
+    );
+  }
+
+  createScriptDraft(
+    slug: string,
+    payload: CreateScriptDraftPayload,
+  ): Observable<ScriptResponse> {
+    return this.http.post<ScriptResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts`,
+      payload,
+    );
+  }
+
+  updateScriptDraft(
+    slug: string,
+    scriptId: string,
+    payload: UpdateScriptDraftPayload,
+  ): Observable<ScriptResponse> {
+    return this.http.patch<ScriptResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts/${encodeURIComponent(scriptId)}`,
+      payload,
+    );
+  }
+
+  approveScript(
+    slug: string,
+    scriptId: string,
+  ): Observable<ScriptResponse> {
+    return this.http.post<ScriptResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts/${encodeURIComponent(scriptId)}/approve`,
+      {},
+    );
+  }
+
+  retryScript(slug: string, scriptId: string): Observable<ScriptResponse> {
+    return this.http.post<ScriptResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts/${encodeURIComponent(scriptId)}/retry`,
+      {},
+    );
+  }
+
+  getScriptAudio(slug: string, scriptId: string): Observable<Blob> {
+    return this.http.get(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts/${encodeURIComponent(scriptId)}/audio`,
+      { responseType: 'blob' },
+    );
   }
 
   getSongAudio(slug: string, songId: string): Observable<Blob> {

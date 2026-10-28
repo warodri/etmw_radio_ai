@@ -50,6 +50,7 @@ export interface HostDocument {
   avatar: HostAvatar | null;
   avatarSource: HostAvatarSource | null;
   voice: HostVoiceAssignment | null;
+  voiceStudioProfileId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

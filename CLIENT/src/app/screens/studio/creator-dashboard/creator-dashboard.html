@@ -121,6 +121,26 @@
               </svg>
               Hosts
             </a>
+            <a
+              [routerLink]="['/studio', current.slug, 'creator', 'scripts']"
+              class="btn-secondary"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="h-4 w-4"
+              >
+                <path d="M4 9v6h3l5 4V5L7 9Z" />
+                <path d="M16 8.5a5 5 0 0 1 0 7" />
+                <path d="M19 6a8.5 8.5 0 0 1 0 12" />
+              </svg>
+              Scripts
+            </a>
             <a [routerLink]="['/studio', current.slug, 'edit']" class="btn-secondary">
               Edit settings
             </a>
@@ -473,6 +493,22 @@
                 </p>
               </li>
             </ol>
+          </section>
+
+          <section class="surface-card p-5 sm:p-6">
+            <p class="eyebrow">Host scripts</p>
+            <h2 class="mt-2 font-display text-lg font-semibold text-ink-900 dark:text-white">
+              Give the show something to say
+            </h2>
+            <p class="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+              Research a topic, review the spoken script and queue the host audio.
+            </p>
+            <a
+              [routerLink]="['/studio', current.slug, 'creator', 'scripts']"
+              class="btn-secondary mt-4 w-full text-xs"
+            >
+              Open scripts
+            </a>
           </section>
 
           <section class="surface-card p-5 sm:p-6">

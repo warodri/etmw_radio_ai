@@ -50,6 +50,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'studio/:slug/creator/scripts',
+    title: 'Host scripts · ETMW Radio AI',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./screens/studio/scripts-dashboard/scripts-dashboard').then(
+        (component) => component.ScriptsDashboard,
+      ),
+  },
+  {
     path: 'studio',
     title: 'Your studio · ETMW Radio AI',
     canActivate: [authGuard],

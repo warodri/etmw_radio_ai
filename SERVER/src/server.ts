@@ -3,9 +3,11 @@ import { createApp } from './app.js';
 import { closeDatabase, connectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
+import { scriptQueue } from './modules/scripts/script.queue.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
+  await scriptQueue.start();
 
   const server = http.createServer(createApp());
 

@@ -113,6 +113,26 @@ const envSchema = z.object({
     .default("https://ollama--warodri.entertomyworld.com"),
   PHONON_MODEL: z.string().default("phonon"),
   PHONON_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
+
+  OLLAMA_TEXT_MODEL: z.string().default('qwen3-vl:32b-instruct'),
+  OLLAMA_TEXT_TIMEOUT_MS: z.coerce.number().int().positive().default(300000),
+
+  POIROT_API_URL: z
+    .string()
+    .url()
+    .default('https://entertomyworld.com/apps/poirot'),
+  POIROT_API_KEY: z.string().default(''),
+  POIROT_TIMEOUT_MS: z.coerce.number().int().positive().default(240000),
+
+  VOICE_STUDIO_API_URL: z
+    .string()
+    .url()
+    .default('https://voice-studio--warodri.entertomyworld.com'),
+  VOICE_STUDIO_API_KEY: z.string().default(''),
+  VOICE_STUDIO_TIMEOUT_MS: z.coerce.number().int().positive().default(900000),
+
+  SCRIPT_MAX_WORDS: z.coerce.number().int().positive().default(1300),
+  SCRIPT_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(600),
 });
 
 const parsed = envSchema.parse(process.env);
