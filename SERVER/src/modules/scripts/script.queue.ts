@@ -211,6 +211,22 @@ class ScriptQueue {
     ownerId: ObjectId,
     language: string,
   ): Promise<string> {
+    const override = env.VOICE_STUDIO_PROFILE_OVERRIDE.trim();
+
+    if (override) {
+      const existing = await voiceStudio.getProfile(override);
+
+      if (!existing) {
+        throw new ApiError(
+          400,
+          'VOICE_PROFILE_OVERRIDE_MISSING',
+          `The VoiceStudio profile override "${override}" does not exist.`,
+        );
+      }
+
+      return override;
+    }
+
     const host = await this.hosts.findOwned(hostId, stationId, ownerId);
 
     if (!host?.voice?.name) {

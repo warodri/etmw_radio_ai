@@ -127,6 +127,10 @@ class VoiceStudioService {
     form.append('max_chunk_chars', '800');
     form.append('stream', 'true');
 
+    if (env.VOICE_STUDIO_ENGINE) {
+      form.append('engine', env.VOICE_STUDIO_ENGINE);
+    }
+
     let response: Response;
 
     try {

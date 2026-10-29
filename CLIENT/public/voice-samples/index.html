@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ETMW voice engine samples</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: radial-gradient(circle at 90% 0%, #431407 0, #12100e 34%, #0b0908 70%);
+        color: #f5f5f4;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        min-height: 100vh;
+      }
+      .wrap { max-width: 860px; margin: 0 auto; padding: 56px 20px 80px; }
+      .eyebrow { color: #fb923c; font-size: 11px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; }
+      h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.05; letter-spacing: -0.04em; margin: 12px 0 14px; }
+      .intro { max-width: 680px; color: #a8a29e; line-height: 1.65; font-size: 15px; margin: 0 0 28px; }
+      .sample {
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 20px;
+        padding: 18px;
+        margin: 14px 0;
+      }
+      .sample h2 { margin: 0; font-size: 17px; letter-spacing: -0.01em; }
+      .sample p { margin: 7px 0 14px; color: #a8a29e; font-size: 13px; line-height: 1.55; }
+      .tag { display: inline-block; margin-left: 8px; padding: 4px 8px; border-radius: 999px; background: rgba(249,115,22,0.12); color: #fdba74; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; }
+      audio { width: 100%; height: 42px; }
+      .note {
+        margin: 28px 0 0; padding: 16px 18px; border-radius: 16px;
+        background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.22);
+        color: #fed7aa; font-size: 13px; line-height: 1.6;
+      }
+      code { color: #fdba74; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+      a { color: #fdba74; }
+      .back { display: inline-block; margin-bottom: 28px; color: #a8a29e; text-decoration: none; font-size: 13px; }
+      .back:hover { color: #fdba74; }
+      .foot { margin-top: 28px; color: #57534e; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="../">← Back to ETMW Radio AI</a>
+      <div class="eyebrow">Voice lab · same script</div>
+      <h1>Which voice engine sounds best?</h1>
+      <p class="intro">
+        These are real renders of the same paragraph. The current radio build already uses VoiceStudio
+        OmniVoice for the final host audio; Phonon is used to create the host reference voice. Motion
+        Graphics also uses Phonon, so it does not add a separate TTS engine.
+      </p>
+
+      <section class="sample">
+        <h2>1. Phonon <span class="tag">reference / motion graphics</span></h2>
+        <p>The voice reference currently used for Nocturnal Animal. Warm and dramatic, but limited as a final narration voice.</p>
+        <audio controls preload="metadata" src="phonon.mp3"></audio>
+      </section>
+
+      <section class="sample">
+        <h2>2. VoiceStudio OmniVoice — current radio clone <span class="tag">current build</span></h2>
+        <p>The actual engine and cloned host profile used by ETMW Radio AI today. This is the baseline to beat.</p>
+        <audio controls preload="metadata" src="voice-studio-clone.mp3"></audio>
+      </section>
+
+      <section class="sample">
+        <h2>3. VoiceStudio OmniVoice — native design voice <span class="tag">no Phonon</span></h2>
+        <p>A voice designed inside VoiceStudio, with no Phonon reference. This is the most direct way to move away from the Phonon timbre.</p>
+        <audio controls preload="metadata" src="voice-studio-design.mp3"></audio>
+      </section>
+
+      <section class="sample">
+        <h2>4. VoiceStudio KittenTTS <span class="tag">fast · preset</span></h2>
+        <p>Lightweight English preset voice. Fast and clear, but it cannot clone a host voice or use a reference profile.</p>
+        <audio controls preload="metadata" src="kittentts.mp3"></audio>
+      </section>
+
+      <section class="sample">
+        <h2>5. VoiceStudio MLX-Audio <span class="tag">Apple Silicon · preset</span></h2>
+        <p>The MLX-Audio Kokoro preset. Also a preset voice in this configuration; cloning needs the CSM model selected in VoiceStudio.</p>
+        <audio controls preload="metadata" src="mlx-audio.mp3"></audio>
+      </section>
+
+      <div class="note">
+        <strong>How to switch engines:</strong><br />
+        Set <code>VOICE_STUDIO_ENGINE=omnivoice</code> (current), <code>kittentts</code>, or <code>mlx-audio</code> in the radio server environment.
+        To try the native design voice for every host, set <code>VOICE_STUDIO_PROFILE_OVERRIDE=e2764a03</code>.
+        Phonon remains available and is not removed.
+      </div>
+
+      <p class="foot">Generated with ETMW Radio AI · VoiceStudio · Phonon. Samples are for internal evaluation.</p>
+    </main>
+  </body>
+</html>

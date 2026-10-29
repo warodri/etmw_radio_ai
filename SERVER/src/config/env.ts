@@ -130,6 +130,8 @@ const envSchema = z.object({
     .default('https://voice-studio--warodri.entertomyworld.com'),
   VOICE_STUDIO_API_KEY: z.string().default(''),
   VOICE_STUDIO_TIMEOUT_MS: z.coerce.number().int().positive().default(900000),
+  VOICE_STUDIO_ENGINE: z.string().trim().max(40).default(''),
+  VOICE_STUDIO_PROFILE_OVERRIDE: z.string().trim().max(80).default(''),
 
   SCRIPT_MAX_WORDS: z.coerce.number().int().positive().default(1300),
   SCRIPT_MAX_HOSTS: z.coerce.number().int().positive().max(8).default(2),
