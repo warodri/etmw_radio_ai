@@ -56,7 +56,7 @@ export class AutoGenerationDashboardPage implements OnInit, OnDestroy {
   protected readonly hosts = computed(() => this.dashboard()?.hosts ?? []);
   protected readonly job = computed(() => this.dashboard()?.job ?? null);
   protected readonly voicedHosts = computed(() =>
-    this.hosts().filter((host) => Boolean(host.voice)),
+    this.hosts().filter((host) => Boolean(host.voice || host.referenceVoice)),
   );
   protected readonly isActive = computed(() => {
     const status = this.job()?.status;

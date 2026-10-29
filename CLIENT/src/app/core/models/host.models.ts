@@ -33,6 +33,14 @@ export interface HostVoiceAssignment {
   assignedAt: string;
 }
 
+export interface HostVoiceReference {
+  id: string;
+  name: string;
+  source: 'builtin' | 'upload';
+  accent: string;
+  assignedAt: string;
+}
+
 export interface HostVoicePayload {
   voiceId: string;
   emotion: HostVoiceEmotion;
@@ -47,6 +55,7 @@ export interface HostPersona {
   avatarUrl: string | null;
   avatarSource: HostAvatarSource | null;
   voice: HostVoiceAssignment | null;
+  referenceVoice: HostVoiceReference | null;
   createdAt: string;
   updatedAt: string;
 }

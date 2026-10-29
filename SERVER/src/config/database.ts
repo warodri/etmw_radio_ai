@@ -50,6 +50,15 @@ export async function connectDatabase(): Promise<Db> {
   await db
     .collection('auto_generation_jobs')
     .createIndex({ status: 1, createdAt: 1 });
+  await db
+    .collection('voice_references')
+    .createIndex({ source: 1, ownerId: 1, stationId: 1 });
+  await db
+    .collection('voice_references')
+    .createIndex(
+      { builtinKey: 1 },
+      { unique: true, partialFilterExpression: { builtinKey: { $type: 'string' } } },
+    );
 
   logger.info('database.connected', { database: env.MONGO_DB_NAME });
   return db;

@@ -99,7 +99,7 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
   protected readonly audioDuration = signal(0);
 
   protected readonly voicedHosts = computed(() =>
-    this.hosts().filter((host) => Boolean(host.voice)),
+    this.hosts().filter((host) => Boolean(host.voice || host.referenceVoice)),
   );
   protected readonly host1 = computed(
     () => this.hosts().find((host) => host.id === this.host1Id()) ?? null,
@@ -263,6 +263,10 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
   }
 
   protected hostLabel(host: HostPersona): string {
+    if (host.referenceVoice) {
+      return `${host.name} — ${host.referenceVoice.name} · Reference`;
+    }
+
     return host.voice
       ? `${host.name} — ${host.voice.name} · ${this.capitalize(host.voice.emotion)}`
       : `${host.name} — no voice assigned`;

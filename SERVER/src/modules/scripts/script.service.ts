@@ -136,7 +136,7 @@ export class ScriptService {
         throw new ApiError(404, 'HOST_NOT_FOUND', 'That host does not exist.');
       }
 
-      if (!host.voice?.name) {
+      if (!host.voice?.name && !host.voiceReference && !host.voiceStudioProfileId) {
         throw new ApiError(
           400,
           'HOST_VOICE_MISSING',
@@ -150,7 +150,7 @@ export class ScriptService {
         hostName: host.name,
         personality: host.personality,
         skills: host.skills,
-        emotion: host.voice.emotion,
+        emotion: host.voice?.emotion ?? 'warm',
       });
     }
 

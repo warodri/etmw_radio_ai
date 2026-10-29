@@ -132,8 +132,8 @@
                     <p class="truncate text-sm font-semibold text-ink-900 dark:text-white">{{ host.name }}</p>
                     <p class="truncate text-[0.68rem] text-stone-500 dark:text-stone-400">{{ host.personality }}</p>
                   </div>
-                  <span [class]="host.voice ? 'chip chip--small chip--active' : 'chip chip--small'">
-                    {{ host.voice ? host.voice.name : 'No voice' }}
+                  <span [class]="host.voice || host.referenceVoice ? 'chip chip--small chip--active' : 'chip chip--small'">
+                    {{ host.referenceVoice ? host.referenceVoice.name + ' · Reference' : host.voice ? host.voice.name : 'No voice' }}
                   </span>
                 </div>
               } @empty {

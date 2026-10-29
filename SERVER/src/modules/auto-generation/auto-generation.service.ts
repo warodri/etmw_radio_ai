@@ -8,7 +8,7 @@ import { CreatorService } from '../creator/creator.service.js';
 import { CreatorSongRepository } from '../creator/creator.repository.js';
 import { toCreatorSongView } from '../creator/creator.model.js';
 import { HostRepository } from '../hosts/host.repository.js';
-import { toHostView } from '../hosts/host.model.js';
+import { hostHasVoice, toHostView } from '../hosts/host.model.js';
 import { ScriptRepository } from '../scripts/script.repository.js';
 import { ScriptService } from '../scripts/script.service.js';
 import { toScriptView } from '../scripts/script.model.js';
@@ -144,7 +144,7 @@ export class AutoGenerationService {
 
     const hosts = await this.hosts.listByStation(stationId, owner);
     const voiced = hosts
-      .filter((host) => Boolean(host.voice?.name))
+      .filter(hostHasVoice)
       .slice(0, env.SCRIPT_MAX_HOSTS);
 
     if (voiced.length === 0) {

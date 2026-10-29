@@ -12,6 +12,7 @@ import { hostCreatorRoutes, hostPublicRoutes } from './modules/hosts/host.routes
 import { playlistCreatorRoutes, radioPublicRoutes } from './modules/playlist/playlist.routes.js';
 import { scriptRoutes } from './modules/scripts/script.routes.js';
 import { stationRoutes } from './modules/stations/station.routes.js';
+import { voiceReferenceRoutes } from './modules/voice-references/voice-reference.routes.js';
 
 const authController = new AuthController();
 
@@ -58,6 +59,7 @@ export function createApp(): express.Application {
   app.use('/api/creator', scriptRoutes);
   app.use('/api/creator', playlistCreatorRoutes);
   app.use('/api/creator', autoGenerationCreatorRoutes);
+  app.use('/api/creator', voiceReferenceRoutes);
   app.use('/api/hosts', hostPublicRoutes);
 
   app.use(notFoundMiddleware);

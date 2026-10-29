@@ -11,6 +11,7 @@ import {
   HostVoiceOption,
 } from '../../../core/models/host.models';
 import { RadioStation } from '../../../core/models/station.models';
+import { VoiceReference } from '../../../core/models/voice-reference.models';
 import { apiErrorMessage } from '../../../core/services/auth.service';
 import { CreatorService } from '../../../core/services/creator.service';
 import { DEFAULT_STATION_ARTWORK, StationService } from '../../../core/services/station.service';
@@ -62,6 +63,17 @@ export class HostsDashboard implements OnInit, OnDestroy {
   protected readonly previewPlaying = signal(false);
   protected readonly voiceSaving = signal(false);
   protected readonly voiceError = signal<string | null>(null);
+  protected readonly voiceReferences = signal<VoiceReference[]>([]);
+  protected readonly voiceReferencesLoading = signal(false);
+  protected readonly referenceError = signal<string | null>(null);
+  protected readonly referenceSavingId = signal<string | null>(null);
+  protected readonly referencePreviewId = signal<string | null>(null);
+  protected readonly referenceUploading = signal(false);
+  protected readonly referenceFileName = signal<string | null>(null);
+  protected readonly referenceFileDataUrl = signal<string | null>(null);
+  protected readonly referenceName = signal('');
+  protected readonly referenceGender = signal<HostGender>('female');
+  protected readonly referenceAccent = signal('en-GB');
 
   private readonly previewAudio = new Audio();
   private previewUrl: string | null = null;
@@ -441,6 +453,10 @@ export class HostsDashboard implements OnInit, OnDestroy {
       this.loadVoiceCatalog();
     }
 
+    if (this.voiceReferences().length === 0) {
+      this.loadVoiceReferences();
+    }
+
     setTimeout(() => {
       document.getElementById('voice-panel')?.scrollIntoView({
         behavior: 'smooth',
@@ -454,6 +470,209 @@ export class HostsDashboard implements OnInit, OnDestroy {
     this.voiceHost.set(null);
     this.voiceError.set(null);
     this.previewLoading.set(false);
+  }
+
+  protected loadVoiceReferences(): void {
+    this.voiceReferencesLoading.set(true);
+    this.referenceError.set(null);
+
+    this.creator.getVoiceReferences(this.slug).subscribe({
+      next: (response) => {
+        this.voiceReferences.set(response.references);
+        this.voiceReferencesLoading.set(false);
+      },
+      error: (error: unknown) => {
+        this.referenceError.set(apiErrorMessage(error));
+        this.voiceReferencesLoading.set(false);
+      },
+    });
+  }
+
+  protected previewReference(reference: VoiceReference): void {
+    if (this.referencePreviewId() === reference.id && this.previewPlaying()) {
+      this.stopPreview();
+      return;
+    }
+
+    this.stopPreview();
+    this.previewLoading.set(true);
+    this.referenceError.set(null);
+    this.referencePreviewId.set(reference.id);
+
+    this.creator.getVoiceReferenceAudio(this.slug, reference.id).subscribe({
+      next: (blob) => {
+        this.previewUrl = URL.createObjectURL(blob);
+        this.previewAudio.src = this.previewUrl;
+        this.previewAudio.load();
+        this.previewAudio
+          .play()
+          .catch(() => {
+            this.referenceError.set('Your browser blocked playback. Press play again.');
+            this.previewPlaying.set(false);
+          })
+          .finally(() => this.previewLoading.set(false));
+      },
+      error: (error: unknown) => {
+        this.previewLoading.set(false);
+        this.referenceError.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  protected useReference(reference: VoiceReference): void {
+    const host = this.voiceHost();
+
+    if (!host) {
+      return;
+    }
+
+    this.referenceSavingId.set(reference.id);
+    this.referenceError.set(null);
+
+    this.creator.assignHostVoiceReference(this.slug, host.id, reference.id).subscribe({
+      next: (response) => {
+        this.referenceSavingId.set(null);
+        this.hosts.update((hosts) =>
+          hosts.map((item) => (item.id === response.host.id ? response.host : item)),
+        );
+        this.notice.set(`${reference.name} is now the voice of ${response.host.name}.`);
+        this.closeVoice();
+      },
+      error: (error: unknown) => {
+        this.referenceSavingId.set(null);
+        this.referenceError.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  protected removeHostReference(): void {
+    const host = this.voiceHost();
+
+    if (!host?.referenceVoice) {
+      return;
+    }
+
+    this.referenceSavingId.set(host.referenceVoice.id);
+    this.referenceError.set(null);
+
+    this.creator.removeHostVoiceReference(this.slug, host.id).subscribe({
+      next: (response) => {
+        this.referenceSavingId.set(null);
+        this.hosts.update((hosts) =>
+          hosts.map((item) => (item.id === response.host.id ? response.host : item)),
+        );
+        this.notice.set(`The reference voice was removed from ${response.host.name}.`);
+        this.closeVoice();
+      },
+      error: (error: unknown) => {
+        this.referenceSavingId.set(null);
+        this.referenceError.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  protected onReferenceFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    this.referenceError.set(null);
+
+    if (!file) {
+      this.referenceFileName.set(null);
+      this.referenceFileDataUrl.set(null);
+      return;
+    }
+
+    if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') {
+      this.referenceError.set('Upload a .wav file for the voice reference.');
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      this.referenceError.set('Keep the WAV file under 4 MB.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.referenceFileName.set(file.name);
+      this.referenceFileDataUrl.set(String(reader.result));
+      if (!this.referenceName().trim()) {
+        this.referenceName.set(file.name.replace(/\.wav$/i, '').slice(0, 80));
+      }
+    };
+    reader.onerror = () => this.referenceError.set('That WAV file could not be read.');
+    reader.readAsDataURL(file);
+  }
+
+  protected onReferenceNameInput(event: Event): void {
+    this.referenceName.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onReferenceGenderChange(event: Event): void {
+    this.referenceGender.set((event.target as HTMLSelectElement).value as HostGender);
+  }
+
+  protected onReferenceAccentChange(event: Event): void {
+    this.referenceAccent.set((event.target as HTMLSelectElement).value);
+  }
+
+  protected uploadAndUseReference(): void {
+    const host = this.voiceHost();
+    const dataUrl = this.referenceFileDataUrl();
+    const name = this.referenceName().trim();
+
+    if (!host || !dataUrl) {
+      this.referenceError.set('Choose a WAV file first.');
+      return;
+    }
+
+    if (name.length < 2) {
+      this.referenceError.set('Give the voice a name first.');
+      return;
+    }
+
+    this.referenceUploading.set(true);
+    this.referenceError.set(null);
+
+    this.creator
+      .uploadVoiceReference(this.slug, {
+        name,
+        description: 'Uploaded reference voice',
+        gender: this.referenceGender(),
+        accent: this.referenceAccent(),
+        audioDataUrl: dataUrl,
+      })
+      .subscribe({
+        next: (response) => {
+          this.voiceReferences.update((references) => [...references, response.reference]);
+          this.creator.assignHostVoiceReference(this.slug, host.id, response.reference.id).subscribe({
+            next: (assigned) => {
+              this.referenceUploading.set(false);
+              this.hosts.update((hosts) =>
+                hosts.map((item) => (item.id === assigned.host.id ? assigned.host : item)),
+              );
+              this.notice.set(`${response.reference.name} is now the voice of ${assigned.host.name}.`);
+              this.closeVoice();
+            },
+            error: (error: unknown) => {
+              this.referenceUploading.set(false);
+              this.referenceError.set(apiErrorMessage(error));
+            },
+          });
+        },
+        error: (error: unknown) => {
+          this.referenceUploading.set(false);
+          this.referenceError.set(apiErrorMessage(error));
+        },
+      });
+  }
+
+  protected referenceDuration(reference: VoiceReference): string {
+    const seconds = Math.round(reference.durationSeconds);
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   }
 
   protected loadVoiceCatalog(): void {
@@ -615,6 +834,7 @@ export class HostsDashboard implements OnInit, OnDestroy {
 
     this.previewPlaying.set(false);
     this.previewLoading.set(false);
+    this.referencePreviewId.set(null);
   }
 
   private addSkillValues(values: string[]): void {

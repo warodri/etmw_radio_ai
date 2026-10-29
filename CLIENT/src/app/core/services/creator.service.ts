@@ -18,6 +18,11 @@ import {
   HostVoicePayload,
 } from '../models/host.models';
 import {
+  CreateVoiceReferencePayload,
+  VoiceReference,
+  VoiceReferenceListResponse,
+} from '../models/voice-reference.models';
+import {
   CreateScriptDraftPayload,
   ScriptListResponse,
   ScriptResponse,
@@ -89,6 +94,49 @@ export class CreatorService {
 
   getVoiceCatalog(): Observable<HostVoiceCatalogResponse> {
     return this.http.get<HostVoiceCatalogResponse>(`${API_BASE_URL}/creator/voice-catalog`);
+  }
+
+  getVoiceReferences(slug: string): Observable<VoiceReferenceListResponse> {
+    return this.http.get<VoiceReferenceListResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/voice-references`,
+    );
+  }
+
+  uploadVoiceReference(
+    slug: string,
+    payload: CreateVoiceReferencePayload,
+  ): Observable<{ reference: VoiceReference }> {
+    return this.http.post<{ reference: VoiceReference }>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/voice-references`,
+      payload,
+    );
+  }
+
+  getVoiceReferenceAudio(slug: string, referenceId: string): Observable<Blob> {
+    return this.http.get(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/voice-references/${encodeURIComponent(referenceId)}/audio`,
+      { responseType: 'blob' },
+    );
+  }
+
+  assignHostVoiceReference(
+    slug: string,
+    hostId: string,
+    referenceId: string,
+  ): Observable<HostResponse> {
+    return this.http.patch<HostResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}/voice-reference`,
+      { referenceId },
+    );
+  }
+
+  removeHostVoiceReference(
+    slug: string,
+    hostId: string,
+  ): Observable<HostResponse> {
+    return this.http.delete<HostResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/hosts/${encodeURIComponent(hostId)}/voice-reference`,
+    );
   }
 
   assignHostVoice(

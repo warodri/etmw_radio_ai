@@ -39,6 +39,14 @@ export interface HostAvatar {
   data?: Buffer;
 }
 
+export interface HostVoiceReference {
+  id: ObjectId;
+  name: string;
+  source: 'builtin' | 'upload';
+  accent: string;
+  assignedAt: Date;
+}
+
 export interface HostDocument {
   _id?: ObjectId;
   stationId: ObjectId;
@@ -50,9 +58,24 @@ export interface HostDocument {
   avatar: HostAvatar | null;
   avatarSource: HostAvatarSource | null;
   voice: HostVoiceAssignment | null;
+  voiceReference: HostVoiceReference | null;
   voiceStudioProfileId: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface HostVoiceReferenceView {
+  id: string;
+  name: string;
+  source: 'builtin' | 'upload';
+  accent: string;
+  assignedAt: string;
+}
+
+export function hostHasVoice(host: HostDocument): boolean {
+  return Boolean(
+    host.voice?.name || host.voiceReference || host.voiceStudioProfileId,
+  );
 }
 
 export interface HostView {
@@ -64,6 +87,7 @@ export interface HostView {
   avatarUrl: string | null;
   avatarSource: HostAvatarSource | null;
   voice: HostVoiceView | null;
+  referenceVoice: HostVoiceReferenceView | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +112,15 @@ export function toHostView(host: HostDocument & { _id: ObjectId }): HostView {
           name: host.voice.name,
           emotion: host.voice.emotion,
           assignedAt: host.voice.assignedAt.toISOString(),
+        }
+      : null,
+    referenceVoice: host.voiceReference
+      ? {
+          id: host.voiceReference.id.toHexString(),
+          name: host.voiceReference.name,
+          source: host.voiceReference.source,
+          accent: host.voiceReference.accent,
+          assignedAt: host.voiceReference.assignedAt.toISOString(),
         }
       : null,
     createdAt: host.createdAt.toISOString(),

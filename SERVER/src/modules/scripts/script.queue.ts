@@ -229,21 +229,26 @@ class ScriptQueue {
 
     const host = await this.hosts.findOwned(hostId, stationId, ownerId);
 
-    if (!host?.voice?.name) {
-      throw new ApiError(
-        400,
-        'HOST_VOICE_MISSING',
-        'A host in this conversation has no voice assigned.',
-      );
+    if (!host) {
+      throw new ApiError(404, 'HOST_NOT_FOUND', 'A host in this conversation does not exist.');
     }
 
     let profileId = host.voiceStudioProfileId;
 
     if (profileId) {
       const existing = await voiceStudio.getProfile(profileId);
-      if (!existing) {
-        profileId = null;
+      if (existing) {
+        return profileId;
       }
+      profileId = null;
+    }
+
+    if (!host.voice?.name) {
+      throw new ApiError(
+        400,
+        'HOST_VOICE_MISSING',
+        'A host in this conversation has no voice assigned.',
+      );
     }
 
     if (!profileId) {

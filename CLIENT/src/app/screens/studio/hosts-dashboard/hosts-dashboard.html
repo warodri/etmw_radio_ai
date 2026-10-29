@@ -560,6 +560,125 @@
             </div>
           }
 
+          <section class="mt-5 rounded-3xl border border-brand-500/20 bg-brand-500/[0.055] p-4 sm:p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="eyebrow">Reference voices</p>
+                <h3 class="mt-1 font-display text-xl font-semibold tracking-tight text-ink-900 dark:text-white">
+                  Clone with MLX CSM
+                </h3>
+                <p class="mt-1 max-w-2xl text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+                  Use a built-in reference or upload a clean 5–15 second WAV. Each reference becomes a distinct VoiceStudio profile for this host.
+                </p>
+              </div>
+              @if (host.referenceVoice) {
+                <span class="chip chip--small chip--active">{{ host.referenceVoice.name }}</span>
+              }
+            </div>
+
+            @if (referenceError()) {
+              <div class="mt-3 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs leading-relaxed text-red-700 dark:text-red-300" role="alert">
+                {{ referenceError() }}
+              </div>
+            }
+
+            @if (host.referenceVoice) {
+              <div class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-stone-200/80 bg-white/50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
+                <div class="min-w-0">
+                  <p class="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Assigned reference</p>
+                  <p class="truncate text-sm font-semibold text-ink-900 dark:text-white">{{ host.referenceVoice.name }} · {{ host.referenceVoice.accent }}</p>
+                </div>
+                <button type="button" class="text-[0.68rem] font-semibold text-red-600 hover:underline disabled:opacity-50 dark:text-red-300" [disabled]="referenceSavingId() !== null" (click)="removeHostReference()">Remove</button>
+              </div>
+            }
+
+            @if (voiceReferencesLoading()) {
+              <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+                  <div class="h-24 animate-pulse rounded-2xl bg-stone-200/60 dark:bg-white/5"></div>
+                }
+              </div>
+            } @else {
+              <div class="mt-4 grid max-h-80 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                @for (reference of voiceReferences(); track reference.id) {
+                  <article class="rounded-2xl border border-stone-200/80 bg-white/55 p-3 dark:border-white/10 dark:bg-white/[0.04]">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-ink-900 dark:text-white">{{ reference.name }}</p>
+                        <p class="mt-0.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] text-stone-500 dark:text-stone-400">
+                          {{ reference.accent }} · {{ reference.gender }} · {{ referenceDuration(reference) }}
+                        </p>
+                      </div>
+                      <span class="chip chip--small shrink-0">{{ reference.source === 'builtin' ? 'Library' : 'Upload' }}</span>
+                    </div>
+                    <p class="mt-2 line-clamp-2 text-[0.68rem] leading-relaxed text-stone-500 dark:text-stone-400">{{ reference.description }}</p>
+                    <div class="mt-3 flex gap-2">
+                      <button type="button" class="btn-secondary flex-1 px-2.5 py-1.5 text-[0.68rem]" [disabled]="previewLoading()" (click)="previewReference(reference)">
+                        @if (previewLoading() && referencePreviewId() === reference.id) {
+                          Playing…
+                        } @else if (referencePreviewId() === reference.id && previewPlaying()) {
+                          Stop
+                        } @else {
+                          Preview
+                        }
+                      </button>
+                      <button type="button" class="btn-primary flex-1 px-2.5 py-1.5 text-[0.68rem]" [disabled]="referenceSavingId() !== null" (click)="useReference(reference)">
+                        @if (referenceSavingId() === reference.id) {
+                          Assigning…
+                        } @else if (host.referenceVoice?.id === reference.id) {
+                          In use
+                        } @else {
+                          Use
+                        }
+                      </button>
+                    </div>
+                    @if (reference.license) {
+                      <p class="mt-2 truncate text-[0.58rem] text-stone-400 dark:text-stone-500" [title]="reference.attribution">{{ reference.license }} · {{ reference.attribution }}</p>
+                    }
+                  </article>
+                }
+              </div>
+            }
+
+            <div class="mt-4 rounded-2xl border border-dashed border-stone-300/80 bg-white/40 p-3 dark:border-white/15 dark:bg-white/[0.02]">
+              <p class="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400">Upload a reference</p>
+              <p class="mt-1 text-[0.68rem] leading-relaxed text-stone-500 dark:text-stone-400">A clean 5–15 second WAV, one speaker, no music or effects.</p>
+              <div class="mt-3 grid gap-2 sm:grid-cols-[1.1fr_0.7fr_0.7fr]">
+                <input
+                  type="text"
+                  class="field-input px-3 py-2 text-xs"
+                  placeholder="Voice name"
+                  [value]="referenceName()"
+                  (input)="onReferenceNameInput($event)"
+                  maxlength="80"
+                />
+                <select class="field-input px-3 py-2 text-xs" [value]="referenceGender()" (change)="onReferenceGenderChange($event)">
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+                <select class="field-input px-3 py-2 text-xs" [value]="referenceAccent()" (change)="onReferenceAccentChange($event)">
+                  <option value="en-GB">en-GB</option>
+                  <option value="en-US">en-US</option>
+                  <option value="en-AU">en-AU</option>
+                  <option value="en-CA">en-CA</option>
+                </select>
+              </div>
+              <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+                <label class="btn-secondary flex-1 cursor-pointer px-3 py-2 text-xs">
+                  {{ referenceFileName() || 'Choose WAV' }}
+                  <input type="file" accept=".wav,audio/wav,audio/x-wav" class="hidden" (change)="onReferenceFile($event)" />
+                </label>
+                <button type="button" class="btn-primary flex-1 px-3 py-2 text-xs" [disabled]="referenceUploading() || !referenceFileDataUrl()" (click)="uploadAndUseReference()">
+                  @if (referenceUploading()) {
+                    Uploading…
+                  } @else {
+                    Upload &amp; use
+                  }
+                </button>
+              </div>
+            </div>
+          </section>
+
           @if (voiceCatalogLoading()) {
             <div class="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
               <div class="grid gap-2 sm:grid-cols-2">
@@ -847,7 +966,9 @@
                         <path d="M16 8.5a5 5 0 0 1 0 7" />
                         <path d="M19 6a8.5 8.5 0 0 1 0 12" />
                       </svg>
-                      @if (host.voice) {
+                      @if (host.referenceVoice) {
+                        {{ host.referenceVoice.name }} · Reference
+                      } @else if (host.voice) {
                         {{ host.voice.name }} · {{ emotionLabel(host.voice.emotion) }}
                       } @else {
                         No voice assigned
@@ -873,7 +994,7 @@
                       class="btn-secondary px-3 py-2 text-xs"
                       (click)="openVoice(host)"
                     >
-                      {{ host.voice ? 'Change voice' : 'Voice' }}
+                      {{ host.voice || host.referenceVoice ? 'Change voice' : 'Voice' }}
                     </button>
                     <button
                       type="button"

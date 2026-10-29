@@ -99,6 +99,7 @@ export class HostService {
       avatar: avatar ?? null,
       avatarSource: avatar ? (input.avatarSource ?? "upload") : null,
       voice: null,
+      voiceReference: null,
       voiceStudioProfileId: null,
       createdAt: now,
       updatedAt: now,
@@ -227,6 +228,7 @@ export class HostService {
         emotion: input.emotion,
         assignedAt: new Date(),
       },
+      voiceReference: null,
       voiceStudioProfileId: null,
       updatedAt: new Date(),
     });
@@ -249,6 +251,7 @@ export class HostService {
     const hostId = toObjectId(hostIdInput);
     const updated = await this.hosts.updateOwned(hostId, stationId, ownerId, {
       voice: null,
+      voiceReference: null,
       voiceStudioProfileId: null,
       updatedAt: new Date(),
     });

@@ -12,6 +12,7 @@ import {
 } from '../creator/creator.repository.js';
 import { HostRepository } from '../hosts/host.repository.js';
 import { PlaylistRepository } from '../playlist/playlist.repository.js';
+import { VoiceReferenceRepository } from '../voice-references/voice-reference.repository.js';
 import { ScriptRepository } from '../scripts/script.repository.js';
 import { StationRepository } from './station.repository.js';
 import {
@@ -78,6 +79,7 @@ export class StationService {
     private readonly hosts = new HostRepository(),
     private readonly scripts = new ScriptRepository(),
     private readonly playlists = new PlaylistRepository(),
+    private readonly voiceReferences = new VoiceReferenceRepository(),
   ) {}
 
   async listPublic(): Promise<StationView[]> {
@@ -328,6 +330,7 @@ export class StationService {
     await this.hosts.deleteByStation(id, ownerId);
     await this.scripts.deleteByStation(id, ownerId);
     await this.playlists.deleteByStation(id, ownerId);
+    await this.voiceReferences.deleteByStation(id, ownerId);
   }
 
   async getArtwork(
