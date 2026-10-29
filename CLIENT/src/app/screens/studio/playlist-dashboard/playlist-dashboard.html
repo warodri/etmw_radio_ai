@@ -286,21 +286,38 @@
                 (input)="onPlayheadInput($event)"
               />
             </div>
-            <button
-              type="button"
-              class="btn-secondary shrink-0 px-3 py-2 text-xs"
-              [disabled]="previewLoading() || totalDuration() <= 0"
-              (click)="togglePreview()"
-            >
-              @if (previewLoading()) {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-3.5 w-3.5 animate-spin"><path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" /></svg>
-                Rendering…
-              } @else if (previewing()) {
-                Stop preview
-              } @else {
-                Preview {{ previewSeconds }}s
-              }
-            </button>
+            @if (publicStreamReady()) {
+              <button
+                type="button"
+                class="btn-secondary shrink-0 px-3 py-2 text-xs"
+                [disabled]="totalDuration() <= 0"
+                (click)="listenFromPlayhead()"
+              >
+                @if (isBuilderPlaying()) {
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-3.5 w-3.5"><rect x="7" y="5" width="3.5" height="14" rx="1" /><rect x="13.5" y="5" width="3.5" height="14" rx="1" /></svg>
+                  Pause playback
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-3.5 w-3.5"><path d="M8 5.5v13l10-6.5Z" /></svg>
+                  Listen from here
+                }
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn-secondary shrink-0 px-3 py-2 text-xs"
+                [disabled]="previewLoading() || totalDuration() <= 0"
+                (click)="togglePreview()"
+              >
+                @if (previewLoading()) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-3.5 w-3.5 animate-spin"><path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" /></svg>
+                  Rendering…
+                } @else if (previewing()) {
+                  Stop preview
+                } @else {
+                  Preview {{ previewSeconds }}s
+                }
+              </button>
+            }
           </div>
           @if (previewError()) {
             <p class="mt-2 text-xs font-medium text-red-600 dark:text-red-300">{{ previewError() }}</p>

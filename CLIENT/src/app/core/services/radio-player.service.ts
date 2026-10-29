@@ -87,6 +87,10 @@ export class RadioPlayerService {
     this.startStation(station);
   }
 
+  playStationAt(station: RadioStation, offsetSeconds: number): void {
+    this.startStation(station, offsetSeconds);
+  }
+
   togglePlay(): void {
     if (!this.stationSignal()) {
       return;
@@ -131,7 +135,7 @@ export class RadioPlayerService {
     this.persist();
   }
 
-  private startStation(station: RadioStation): void {
+  private startStation(station: RadioStation, preferredOffset?: number): void {
     const token = ++this.requestToken;
     this.audio.pause();
     this.audio.removeAttribute('src');
@@ -161,9 +165,11 @@ export class RadioPlayerService {
 
         const saved = this.readSaved();
         const offset =
-          saved?.station.slug === radio.station.slug
-            ? saved.offsetSeconds
-            : radio.liveOffsetSeconds;
+          typeof preferredOffset === 'number' && Number.isFinite(preferredOffset)
+            ? preferredOffset
+            : saved?.station.slug === radio.station.slug
+              ? saved.offsetSeconds
+              : radio.liveOffsetSeconds;
 
         this.startFrom(offset);
       },

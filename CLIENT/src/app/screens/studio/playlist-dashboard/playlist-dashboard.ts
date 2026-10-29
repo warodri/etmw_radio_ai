@@ -3,6 +3,7 @@ import {
   OnDestroy,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -41,7 +42,7 @@ export class PlaylistDashboard implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly playlists = inject(PlaylistService);
   private readonly stations = inject(StationService);
-  private readonly radio = inject(RadioPlayerService);
+  protected readonly radio = inject(RadioPlayerService);
 
   private slug = '';
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -98,6 +99,19 @@ export class PlaylistDashboard implements OnInit, OnDestroy {
   });
 
   constructor() {
+    effect(() => {
+      const station = this.station();
+      const playerStation = this.radio.station();
+
+      if (
+        station &&
+        playerStation?.slug === station.slug &&
+        this.radio.playing()
+      ) {
+        this.playhead.set(this.radio.elapsed());
+      }
+    });
+
     this.previewAudio.preload = 'auto';
     this.previewAudio.addEventListener('timeupdate', () => {
       const total = this.totalDuration();
@@ -348,6 +362,7 @@ export class PlaylistDashboard implements OnInit, OnDestroy {
 
   protected onPlayheadInput(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value);
+    this.pauseBuilderPlayback();
     this.stopPreview();
     this.playhead.set(
       Math.min(this.totalDuration(), Math.max(0, Number.isFinite(value) ? value : 0)),
@@ -359,6 +374,7 @@ export class PlaylistDashboard implements OnInit, OnDestroy {
       return;
     }
 
+    this.pauseBuilderPlayback();
     this.stopPreview();
     this.scrubTrack = event.currentTarget as HTMLElement;
     this.scrubTrack.setPointerCapture?.(event.pointerId);
@@ -423,6 +439,38 @@ export class PlaylistDashboard implements OnInit, OnDestroy {
     event.dataTransfer.setData(DRAG_TYPE, payload);
     event.dataTransfer.setData('text/plain', payload);
     event.dataTransfer.effectAllowed = 'copy';
+  }
+
+  protected isBuilderPlaying(): boolean {
+    return (
+      this.radio.station()?.slug === this.station()?.slug &&
+      this.radio.playing()
+    );
+  }
+
+  protected listenFromPlayhead(): void {
+    const current = this.station();
+
+    if (!current || this.totalDuration() <= 0) {
+      return;
+    }
+
+    if (this.isBuilderPlaying()) {
+      this.radio.pause();
+      return;
+    }
+
+    this.stopPreview();
+    this.radio.playStationAt(current, this.playhead());
+  }
+
+  private pauseBuilderPlayback(): void {
+    if (
+      this.radio.station()?.slug === this.station()?.slug &&
+      this.radio.playing()
+    ) {
+      this.radio.pause();
+    }
   }
 
   protected togglePreview(): void {
