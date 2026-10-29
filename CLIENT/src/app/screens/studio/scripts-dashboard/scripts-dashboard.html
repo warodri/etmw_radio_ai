@@ -178,7 +178,7 @@
           <p class="max-w-md text-xs leading-relaxed text-stone-500 dark:text-stone-500">
             Research and writing can take a few minutes. You will review every spoken turn before any audio is generated.
           </p>
-          <button type="submit" class="btn-primary shrink-0" [disabled]="creatingDraft() || !host1()?.voice">
+          <button type="submit" class="btn-primary shrink-0" [disabled]="creatingDraft() || (!host1()?.voice && !host1()?.referenceVoice)">
             @if (creatingDraft()) {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-4 w-4 animate-spin"><path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" /></svg>
               {{ mode() === 'guideline' || research() ? 'Researching & writing…' : 'Writing draft…' }}

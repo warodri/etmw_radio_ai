@@ -180,7 +180,7 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
         this.station.set(hosts.station);
         this.hosts.set(hosts.hosts);
         this.applyScripts(scripts.scripts, scripts.pagination, scripts.limits);
-        const voiced = hosts.hosts.filter((host) => host.voice);
+        const voiced = hosts.hosts.filter((host) => host.voice || host.referenceVoice);
         if (voiced[0]) {
           this.host1Id.set(voiced[0].id);
         }
