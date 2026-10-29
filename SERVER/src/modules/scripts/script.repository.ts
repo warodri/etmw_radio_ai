@@ -84,6 +84,23 @@ export class ScriptRepository {
     );
   }
 
+  async findByIds(
+    ids: ObjectId[],
+    stationId: ObjectId,
+    ownerId: ObjectId,
+  ): Promise<WithId<ScriptDocument>[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.collection()
+      .find(
+        { _id: { $in: ids }, stationId, ownerId },
+        WITHOUT_AUDIO_DATA,
+      )
+      .toArray();
+  }
+
   async listReadyByStation(
     stationId: ObjectId,
     ownerId: ObjectId,

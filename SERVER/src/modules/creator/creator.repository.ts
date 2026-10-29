@@ -81,6 +81,20 @@ export class CreatorSongRepository {
       .toArray();
   }
 
+  async findByIds(
+    ids: ObjectId[],
+    stationId: ObjectId,
+    ownerId: ObjectId,
+  ): Promise<WithId<CreatorSongDocument>[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.collection()
+      .find({ _id: { $in: ids }, stationId, ownerId })
+      .toArray();
+  }
+
   async listPending(
     stationId: ObjectId,
     ownerId: ObjectId,

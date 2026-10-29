@@ -244,6 +244,46 @@ export class CreatorService {
     return songsApi.getSongAudio(song.songsSongId);
   }
 
+  async getSongStatus(
+    ownerIdInput: string,
+    slugInput: string,
+    songIdInput: string,
+  ): Promise<CreatorSongView> {
+    const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
+    const stationId = toObjectId(station.id);
+    const ownerId = toObjectId(ownerIdInput);
+
+    if (!ObjectId.isValid(songIdInput)) {
+      throw new ApiError(404, 'SONG_NOT_FOUND', 'That song does not exist.');
+    }
+
+    const songId = new ObjectId(songIdInput);
+    let song = await this.songRepository.findOwnedSong(
+      songId,
+      stationId,
+      ownerId,
+    );
+
+    if (!song) {
+      throw new ApiError(404, 'SONG_NOT_FOUND', 'That song does not exist.');
+    }
+
+    if (song.status === 'queued' || song.status === 'generating') {
+      await this.syncSong(song);
+      song = await this.songRepository.findOwnedSong(
+        songId,
+        stationId,
+        ownerId,
+      );
+    }
+
+    if (!song) {
+      throw new ApiError(404, 'SONG_NOT_FOUND', 'That song does not exist.');
+    }
+
+    return toCreatorSongView(song);
+  }
+
   private async syncPending(
     stationId: ObjectId,
     ownerId: ObjectId,

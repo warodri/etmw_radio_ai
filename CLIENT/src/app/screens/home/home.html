@@ -251,10 +251,12 @@
                 loading="lazy"
               />
             }
-            <span class="status-pill status-pill--published absolute left-3 top-3 backdrop-blur-md">
-              <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-              Published
-            </span>
+            @if (isGenerating(station)) {
+              <span class="status-pill status-pill--published absolute left-3 top-3 backdrop-blur-md">
+                <span class="live-dot h-1.5 w-1.5 rounded-full bg-current"></span>
+                Generating...
+              </span>
+            }
           </div>
 
           <div class="flex flex-1 flex-col p-4 sm:p-5">

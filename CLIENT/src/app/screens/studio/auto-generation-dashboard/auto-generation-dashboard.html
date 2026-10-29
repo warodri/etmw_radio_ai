@@ -1,0 +1,291 @@
+<section class="app-container py-8 sm:py-12">
+  <a
+    [routerLink]="['/studio', station()?.slug ?? '', 'creator']"
+    class="mb-5 inline-flex items-center gap-2 rounded-full text-sm font-semibold text-stone-500 transition-colors hover:text-brand-700 dark:text-stone-400 dark:hover:text-brand-300"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+      <path d="M19 12H5" />
+      <path d="m11 18-6-6 6-6" />
+    </svg>
+    Back to creator dashboard
+  </a>
+
+  @if (loading()) {
+    <div class="space-y-5">
+      <div class="surface-card h-48 animate-pulse bg-stone-200/60 dark:bg-white/5"></div>
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div class="surface-card h-[32rem] animate-pulse bg-stone-200/60 dark:bg-white/5"></div>
+        <div class="surface-card h-[32rem] animate-pulse bg-stone-200/60 dark:bg-white/5"></div>
+      </div>
+    </div>
+  } @else if (pageError()) {
+    <div class="surface-card mx-auto flex max-w-xl flex-col items-center px-6 py-12 text-center">
+      <h1 class="font-display text-xl font-semibold text-ink-900 dark:text-white">
+        Generation screen unavailable
+      </h1>
+      <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+        {{ pageError() }}
+      </p>
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
+        <button type="button" class="btn-secondary" (click)="load()">Try again</button>
+        <a routerLink="/studio" class="btn-secondary">Back to your studio</a>
+      </div>
+    </div>
+  } @else {
+    @if (station(); as current) {
+      <header class="surface-card relative overflow-hidden">
+        <div aria-hidden="true" class="absolute inset-0 bg-[radial-gradient(55rem_28rem_at_100%_-20%,rgba(249,115,22,0.22),transparent_65%)]"></div>
+        <div class="relative flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+            <img
+              [src]="artworkUrl(current)"
+              [alt]="current.name + ' artwork'"
+              class="h-20 w-20 shrink-0 rounded-2xl border border-stone-200/80 object-cover shadow-lg shadow-stone-900/10 dark:border-white/10"
+            />
+            <div class="min-w-0">
+              <p class="eyebrow">ETMW AI Generation</p>
+              <h1 class="mt-2 break-words font-display text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl dark:text-white">
+                {{ current.name }}
+              </h1>
+              <p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+                Let ETMW Radio AI write and voice new material for the station while you step away.
+              </p>
+              <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                <span class="chip chip--small">{{ voicedHosts().length }} {{ voicedHosts().length === 1 ? 'voiced host' : 'voiced hosts' }}</span>
+                <span class="chip chip--small">{{ current.genres.length }} genres</span>
+                <span class="chip chip--small">1 hour run</span>
+              </div>
+            </div>
+          </div>
+          @if (job(); as currentJob) {
+            <div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+              <span [class]="statusPill(currentJob.status)">
+                @if (currentJob.status === 'running') {
+                  <span class="live-dot h-1.5 w-1.5 rounded-full bg-current"></span>
+                }
+                {{ statusLabel(currentJob.status) }}
+              </span>
+              <p class="text-xs font-semibold text-stone-500 dark:text-stone-400">{{ remainingLabel() }}</p>
+            </div>
+          }
+        </div>
+      </header>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div class="space-y-4">
+          <section class="surface-card p-5 sm:p-6">
+            <p class="eyebrow">How it works</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">
+              A one-hour AI production run.
+            </h2>
+            <p class="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+              ETMW Radio AI will create new songs from this station&apos;s sound, and new conversations using your available hosts. Everything is added to the station library as it finishes.
+            </p>
+            <div class="mt-5 grid gap-3 sm:grid-cols-3">
+              <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-300">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4"><path d="M9 18V5l10-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="16" cy="16" r="3" /></svg>
+                </span>
+                <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400">Songs</p>
+                <p class="mt-1 text-xs leading-relaxed text-stone-600 dark:text-stone-300">Original tracks shaped by the station genres and description.</p>
+              </div>
+              <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-500/15 text-brand-700 dark:text-brand-300">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4"><path d="M4 9v6h3l5 4V5L7 9Z" /><path d="M16 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" /></svg>
+                </span>
+                <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400">Voices</p>
+                <p class="mt-1 text-xs leading-relaxed text-stone-600 dark:text-stone-300">Host conversations written and voiced with your existing cast.</p>
+              </div>
+              <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-signal-500/15 text-signal-500">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" class="h-4 w-4"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                </span>
+                <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400">One hour</p>
+                <p class="mt-1 text-xs leading-relaxed text-stone-600 dark:text-stone-300">It stops automatically and emails you a summary.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface-card p-5 sm:p-6">
+            <p class="eyebrow">What the AI will use</p>
+            <h2 class="mt-2 font-display text-lg font-semibold text-ink-900 dark:text-white">Station brief</h2>
+            <p class="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">{{ current.description }}</p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              @for (genre of current.genres; track genre) {
+                <span class="chip chip--small">{{ genre }}</span>
+              }
+            </div>
+            <p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
+              {{ current.presentationStyle }} · {{ current.language }}
+            </p>
+
+            <h2 class="mt-5 font-display text-lg font-semibold text-ink-900 dark:text-white">Hosts</h2>
+            <div class="mt-3 space-y-2">
+              @for (host of hosts(); track host.id) {
+                <div class="flex items-center gap-3 rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  @if (hostAvatar(host); as avatar) {
+                    <img [src]="avatar" [alt]="host.name" class="h-11 w-11 shrink-0 rounded-full object-cover" />
+                  } @else {
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 font-display text-sm font-semibold text-white">{{ initials(host.name) }}</span>
+                  }
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold text-ink-900 dark:text-white">{{ host.name }}</p>
+                    <p class="truncate text-[0.68rem] text-stone-500 dark:text-stone-400">{{ host.personality }}</p>
+                  </div>
+                  <span [class]="host.voice ? 'chip chip--small chip--active' : 'chip chip--small'">
+                    {{ host.voice ? host.voice.name : 'No voice' }}
+                  </span>
+                </div>
+              } @empty {
+                <p class="text-xs text-stone-500 dark:text-stone-400">No hosts have been created for this station yet.</p>
+              }
+            </div>
+            @if (voicedHosts().length === 0) {
+              <div class="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:text-amber-200" role="status">
+                Assign a voice to at least one host before starting. The AI needs a voice to create conversations.
+              </div>
+            }
+          </section>
+
+          <section class="surface-card p-5 sm:p-6">
+            <p class="eyebrow">Queue</p>
+            <h2 class="mt-2 font-display text-lg font-semibold text-ink-900 dark:text-white">
+              {{ isActive() ? 'Generation in progress' : 'Ready to create' }}
+            </h2>
+            <p class="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+              The run is limited to one hour. If another station is generating, this station will wait in the queue. You can close this page; generation continues and we will email you when it finishes.
+            </p>
+            @if (actionError()) {
+              <div class="mt-3 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ actionError() }}</div>
+            }
+            <button
+              type="button"
+              class="btn-primary mt-4 w-full"
+              [disabled]="!canStart()"
+              (click)="start()"
+            >
+              @if (starting()) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="h-4 w-4 animate-spin"><path d="M21 12a9 9 0 1 1-6.2-8.56" stroke-linecap="round" /></svg>
+                Queueing…
+              } @else if (isActive()) {
+                Generation running
+              } @else if (voicedHosts().length === 0) {
+                Add a host voice first
+              } @else {
+                Start 1-hour ETMW AI Generation
+              }
+            </button>
+          </section>
+        </div>
+
+        <section class="surface-card p-5 sm:p-6">
+          @if (job(); as currentJob) {
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="eyebrow">Generation summary</p>
+                <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-ink-900 dark:text-white">
+                  {{ currentJob.status === 'running' ? 'Creating now' : statusLabel(currentJob.status) }}
+                </h2>
+              </div>
+              <span [class]="statusPill(currentJob.status)">
+                @if (currentJob.status === 'running') {
+                  <span class="live-dot h-1.5 w-1.5 rounded-full bg-current"></span>
+                }
+                {{ statusLabel(currentJob.status) }}
+              </span>
+            </div>
+
+            <div class="mt-5">
+              <div class="flex items-center justify-between gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400">
+                <span>{{ remainingLabel() }}</span>
+                <span>{{ currentJob.cycles }} {{ currentJob.cycles === 1 ? 'cycle' : 'cycles' }}</span>
+              </div>
+              <div class="mt-2 h-2 overflow-hidden rounded-full bg-stone-200/80 dark:bg-white/10">
+                <div class="h-full rounded-full bg-brand-500 transition-[width] duration-1000" [style.width.%]="progress()"></div>
+              </div>
+            </div>
+
+            @if (currentJob.error) {
+              <div class="mt-5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm leading-relaxed text-red-700 dark:text-red-300" role="alert">
+                <strong class="block">The run stopped.</strong>
+                {{ currentJob.error }}
+              </div>
+            }
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-3">
+              <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <p class="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Songs</p>
+                <p class="mt-1 font-display text-2xl font-semibold text-ink-900 dark:text-white">{{ currentJob.songs.length }}</p>
+                <p class="text-[0.68rem] text-stone-500 dark:text-stone-400">{{ currentJob.completedSongs }} ready</p>
+              </div>
+              <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <p class="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Conversations</p>
+                <p class="mt-1 font-display text-2xl font-semibold text-ink-900 dark:text-white">{{ currentJob.scripts.length }}</p>
+                <p class="text-[0.68rem] text-stone-500 dark:text-stone-400">{{ currentJob.completedScripts }} ready</p>
+              </div>
+              <div class="rounded-2xl border border-stone-200/80 bg-white/40 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <p class="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Material</p>
+                <p class="mt-1 font-display text-2xl font-semibold text-ink-900 dark:text-white">{{ currentJob.totalAudioHours.toFixed(2) }} h</p>
+                <p class="text-[0.68rem] text-stone-500 dark:text-stone-400">finished audio</p>
+              </div>
+            </div>
+
+            @if (currentJob.pendingSongs > 0 || currentJob.pendingScripts > 0) {
+              <p class="mt-3 text-xs font-medium text-brand-700 dark:text-brand-300">
+                {{ currentJob.pendingSongs + currentJob.pendingScripts }} item(s) still being generated.
+              </p>
+            }
+
+            <div class="mt-5 grid gap-4 sm:grid-cols-2">
+              <div>
+                <h3 class="font-display text-sm font-semibold text-ink-900 dark:text-white">Songs</h3>
+                <div class="mt-2 space-y-1.5">
+                  @for (song of currentJob.songs; track song.id) {
+                    <div class="flex items-center justify-between gap-2 rounded-xl border border-stone-200/70 bg-white/40 px-3 py-2 text-xs dark:border-white/10 dark:bg-white/[0.02]">
+                      <span class="min-w-0 flex-1 truncate font-semibold text-ink-900 dark:text-stone-200">{{ song.title }}</span>
+                      <span class="shrink-0 text-stone-500 dark:text-stone-400">{{ songDuration(song) }}</span>
+                      <span class="shrink-0 text-[0.6rem] font-bold uppercase tracking-[0.1em]" [class.text-signal-500]="song.status === 'completed'" [class.text-red-600]="song.status === 'failed'" [class.text-brand-700]="song.status !== 'completed' && song.status !== 'failed'">{{ itemStatus(song.status) }}</span>
+                    </div>
+                  } @empty {
+                    <p class="text-xs text-stone-500 dark:text-stone-400">No songs yet.</p>
+                  }
+                </div>
+              </div>
+              <div>
+                <h3 class="font-display text-sm font-semibold text-ink-900 dark:text-white">Conversations</h3>
+                <div class="mt-2 space-y-1.5">
+                  @for (script of currentJob.scripts; track script.id) {
+                    <div class="flex items-center justify-between gap-2 rounded-xl border border-stone-200/70 bg-white/40 px-3 py-2 text-xs dark:border-white/10 dark:bg-white/[0.02]">
+                      <span class="min-w-0 flex-1 truncate font-semibold text-ink-900 dark:text-stone-200">{{ script.title }}</span>
+                      <span class="shrink-0 text-stone-500 dark:text-stone-400">{{ scriptDuration(script) }}</span>
+                      <span class="shrink-0 text-[0.6rem] font-bold uppercase tracking-[0.1em]" [class.text-signal-500]="script.status === 'completed'" [class.text-red-600]="script.status === 'failed'" [class.text-brand-700]="script.status !== 'completed' && script.status !== 'failed'">{{ itemStatus(script.status) }}</span>
+                    </div>
+                  } @empty {
+                    <p class="text-xs text-stone-500 dark:text-stone-400">No conversations yet.</p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <p class="mt-5 text-[0.68rem] leading-relaxed text-stone-500 dark:text-stone-400">
+              Started {{ currentJob.startedAt ? (currentJob.startedAt | date: 'MMM d, HH:mm') : 'when the queue picks it up' }}.
+              @if (currentJob.finishedAt) {
+                Finished {{ currentJob.finishedAt | date: 'MMM d, HH:mm' }}.
+              }
+            </p>
+          } @else {
+            <div class="flex min-h-80 flex-col items-center justify-center px-4 text-center">
+              <span class="flex h-14 w-14 items-center justify-center rounded-3xl border border-brand-500/25 bg-brand-500/10 text-brand-700 dark:text-brand-300">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-6 w-6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" /></svg>
+              </span>
+              <h2 class="mt-4 font-display text-xl font-semibold text-ink-900 dark:text-white">No generation run yet</h2>
+              <p class="mt-2 max-w-sm text-sm leading-relaxed text-stone-500 dark:text-stone-400">
+                Start a run and this page will show the songs, conversations, and hours of material as they are created.
+              </p>
+            </div>
+          }
+        </section>
+      </div>
+    }
+  }
+</section>

@@ -4,10 +4,12 @@ import { closeDatabase, connectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { scriptQueue } from './modules/scripts/script.queue.js';
+import { autoGeneration } from './modules/auto-generation/auto-generation.service.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
   await scriptQueue.start();
+  await autoGeneration.start();
 
   const server = http.createServer(createApp());
 

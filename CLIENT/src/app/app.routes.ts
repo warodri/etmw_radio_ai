@@ -50,6 +50,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'studio/:slug/creator/auto-generation',
+    title: 'ETMW AI Generation · ETMW Radio AI',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./screens/studio/auto-generation-dashboard/auto-generation-dashboard').then(
+        (component) => component.AutoGenerationDashboardPage,
+      ),
+  },
+  {
     path: 'studio/:slug/creator/playlist',
     title: 'Broadcast playlist · ETMW Radio AI',
     canActivate: [authGuard],

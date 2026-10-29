@@ -32,12 +32,38 @@ export interface GeneratedScriptTurn {
   text: string;
 }
 
+export interface SongIdeaInput {
+  stationName: string;
+  description: string;
+  genres: string[];
+  style: string;
+  language: string;
+  seed: number;
+}
+
+export interface GeneratedSongIdea {
+  title: string;
+  mood: string;
+  lyrics: string;
+}
+
 interface OllamaChatResponse {
   message?: {
     content?: string;
   };
   error?: string | { message?: string };
 }
+
+const SONG_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    mood: { type: 'string' },
+    lyrics: { type: 'string' },
+  },
+  required: ['title', 'mood', 'lyrics'],
+  additionalProperties: false,
+};
 
 const TURN_SCHEMA = {
   type: 'object',
@@ -133,6 +159,52 @@ async function readChatStream(response: Response): Promise<string> {
   }
 
   return content;
+}
+
+function parseSongIdea(content: string): GeneratedSongIdea {
+  const stripped = content
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '');
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    const start = stripped.indexOf('{');
+    const end = stripped.lastIndexOf('}');
+
+    if (start < 0 || end <= start) {
+      throw new Error('The song writer returned invalid JSON.');
+    }
+
+    parsed = JSON.parse(stripped.slice(start, end + 1));
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('The song writer returned no song idea.');
+  }
+
+  const title = (parsed as { title?: unknown }).title;
+  const mood = (parsed as { mood?: unknown }).mood;
+  const lyrics = (parsed as { lyrics?: unknown }).lyrics;
+
+  if (
+    typeof title !== 'string' ||
+    typeof mood !== 'string' ||
+    typeof lyrics !== 'string' ||
+    title.trim().length === 0 ||
+    mood.trim().length === 0 ||
+    lyrics.trim().length < 10
+  ) {
+    throw new Error('The song writer returned an incomplete song idea.');
+  }
+
+  return {
+    title: title.trim().slice(0, 120),
+    mood: mood.trim().slice(0, 120),
+    lyrics: lyrics.trim().slice(0, 20_000),
+  };
 }
 
 function parseTurns(content: string): GeneratedScriptTurn[] {
@@ -348,6 +420,114 @@ class OllamaTextService {
     }
 
     return turns;
+  }
+
+  async generateSongIdea(input: SongIdeaInput): Promise<GeneratedSongIdea> {
+    const genres = input.genres.length > 0 ? input.genres.join(', ') : 'radio, cinematic';
+    const system = [
+      'You write original song ideas for ETMW Radio AI.',
+      'Output only JSON matching this exact shape: {"title":"...","mood":"...","lyrics":"..."}',
+      `The station is ${input.stationName}. It broadcasts in ${input.language}.`,
+      `Station description: ${input.description}`,
+      `Genres: ${genres}. Presentation style: ${input.style}.`,
+      'Write an original song with section tags such as [Verse 1], [Chorus], [Verse 2], [Bridge], [Chorus].',
+      'Use 700 to 1,600 characters of lyrics. Make the chorus memorable and singable.',
+      'Never use existing artist names, existing song titles, existing lyrics, URLs, or citations.',
+      'The lyrics must be original and suitable for a radio station.',
+      `Variation seed: ${input.seed}.`,
+    ].join('\n');
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        `${env.OLLAMA_BASE_URL.replace(/\/+$/, '')}/api/chat`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            model: env.OLLAMA_TEXT_MODEL,
+            messages: [
+              { role: 'system', content: system },
+              {
+                role: 'user',
+                content: `Write a new original song for this station. Seed ${input.seed}.`,
+              },
+            ],
+            format: SONG_SCHEMA,
+            stream: true,
+            options: {
+              temperature: 0.85,
+              top_p: 0.95,
+              num_predict: 2200,
+            },
+          }),
+          signal: AbortSignal.timeout(env.OLLAMA_TEXT_TIMEOUT_MS),
+        },
+      );
+    } catch {
+      throw new ApiError(
+        502,
+        'SONG_WRITER_UNAVAILABLE',
+        'The song writer is unavailable. Please try again in a moment.',
+      );
+    }
+
+    if (!response.ok) {
+      let message = 'The song writer could not write this song.';
+      const raw = await response.text().catch(() => '');
+
+      try {
+        const body = JSON.parse(raw) as OllamaChatResponse;
+        if (typeof body.error === 'string') {
+          message = body.error;
+        } else if (body.error?.message) {
+          message = body.error.message;
+        }
+      } catch {
+        // Keep the fallback.
+      }
+
+      logger.warn('ollama.song_failed', {
+        status: response.status,
+        body: raw.slice(0, 400),
+      });
+      throw new ApiError(502, 'SONG_WRITER_FAILED', message);
+    }
+
+    let content: string;
+
+    try {
+      content = await readChatStream(response);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      throw new ApiError(
+        502,
+        'SONG_WRITER_UNAVAILABLE',
+        'The song writer is unavailable. Please try again in a moment.',
+      );
+    }
+
+    if (!content.trim()) {
+      throw new ApiError(
+        502,
+        'SONG_WRITER_EMPTY',
+        'The song writer returned an empty song. Please try again.',
+      );
+    }
+
+    try {
+      return parseSongIdea(content);
+    } catch {
+      throw new ApiError(
+        502,
+        'SONG_WRITER_INVALID',
+        'The song writer returned a malformed song. Please try again.',
+      );
+    }
   }
 }
 
