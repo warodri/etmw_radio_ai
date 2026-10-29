@@ -47,9 +47,9 @@
       <div class="eyebrow">Voice lab · same script</div>
       <h1>Which voice engine sounds best?</h1>
       <p class="intro">
-        These are real renders of the same paragraph. The radio is now set to MLX-Audio (sample 5); Phonon
-        remains the host reference voice. Motion Graphics also uses Phonon, so it does not add a
-        separate TTS engine.
+        These are real renders of the same paragraph. The radio is now set to MLX-Audio using the CSM cloning model
+        (samples 6 and 7); Phonon remains the reference source for the existing host profiles. Motion
+        Graphics also uses Phonon, so it does not add a separate TTS engine.
       </p>
 
       <section class="sample">
@@ -77,14 +77,26 @@
       </section>
 
       <section class="sample">
-        <h2>5. VoiceStudio MLX-Audio <span class="tag">selected · Apple Silicon</span></h2>
-        <p>The MLX-Audio Kokoro preset. This is the selected radio voice. In this configuration it uses a preset voice, so hosts will share it; cloning needs the CSM model selected in VoiceStudio.</p>
+        <h2>5. VoiceStudio MLX-Audio Kokoro <span class="tag">previous preset</span></h2>
+        <p>The MLX-Audio Kokoro preset from the first test. It is a single preset voice, so it cannot give hosts distinct voices.</p>
         <audio controls preload="metadata" src="mlx-audio.mp3"></audio>
+      </section>
+
+      <section class="sample">
+        <h2>6. VoiceStudio MLX-Audio CSM — Hugh reference <span class="tag">selected · cloned</span></h2>
+        <p>The CSM cloning model using the existing Nocturnal Animal reference. Distinct from the Kokoro preset, and this is the path for per-host voices.</p>
+        <audio controls preload="metadata" src="mlx-csm-hugh.mp3"></audio>
+      </section>
+
+      <section class="sample">
+        <h2>7. VoiceStudio MLX-Audio CSM — Maeve reference <span class="tag">second host · cloned</span></h2>
+        <p>The same CSM model with the Nina Latina reference. Two different reference recordings produce two different hosts.</p>
+        <audio controls preload="metadata" src="mlx-csm-maeve.mp3"></audio>
       </section>
 
       <div class="note">
         <strong>How to switch engines:</strong><br />
-        Set <code>VOICE_STUDIO_ENGINE=mlx-audio</code> (selected), <code>omnivoice</code> (cloned host), or <code>kittentts</code> in the radio server environment.
+        Set <code>VOICE_STUDIO_ENGINE=mlx-audio</code> with the VoiceStudio MLX model on <code>csm</code> for cloned hosts. <code>omnivoice</code> and <code>kittentts</code> remain available as alternatives.
         To try the native design voice for every host, set <code>VOICE_STUDIO_PROFILE_OVERRIDE=e2764a03</code>.
         Phonon remains available and is not removed.
       </div>
