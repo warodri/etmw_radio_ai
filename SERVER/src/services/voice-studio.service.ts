@@ -124,7 +124,9 @@ class VoiceStudioService {
     form.append('text', input.text);
     form.append('profile_id', input.profileId);
     form.append('language', input.language || 'English');
-    form.append('max_chunk_chars', '800');
+    form.append('max_chunk_chars', String(env.VOICE_STUDIO_MAX_CHUNK_CHARS));
+    form.append('crossfade_ms', String(env.VOICE_STUDIO_CROSSFADE_MS));
+    form.append('effect_preset', env.VOICE_STUDIO_EFFECT_PRESET);
     form.append('stream', 'true');
 
     if (env.VOICE_STUDIO_ENGINE) {

@@ -26,6 +26,19 @@ export class ScriptController {
     response.json(result);
   };
 
+  rerender = async (
+    request: AuthenticatedRequest,
+    response: Response,
+  ): Promise<void> => {
+    const script = await this.scripts.rerender(
+      this.userId(request),
+      String(request.params['slug'] ?? ''),
+      String(request.params['scriptId'] ?? ''),
+    );
+
+    response.status(202).json({ script });
+  };
+
   get = async (
     request: AuthenticatedRequest,
     response: Response,

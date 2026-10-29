@@ -431,6 +431,46 @@ export class ScriptService {
     return toScriptView(updated);
   }
 
+  async rerender(
+    ownerIdInput: string,
+    slugInput: string,
+    scriptIdInput: string,
+  ): Promise<ScriptView> {
+    const station = await this.stations.getOwnedBySlug(slugInput, ownerIdInput);
+    const stationId = toObjectId(station.id, 'That station does not exist.');
+    const ownerId = toObjectId(ownerIdInput, 'Authentication is required.');
+    const scriptId = toObjectId(scriptIdInput, 'That script does not exist.');
+    const script = await this.scripts.findOwned(scriptId, stationId, ownerId);
+
+    if (!script) {
+      throw new ApiError(404, 'SCRIPT_NOT_FOUND', 'That script does not exist.');
+    }
+
+    if (script.status !== 'completed' && script.status !== 'failed') {
+      throw new ApiError(
+        409,
+        'SCRIPT_NOT_READY',
+        'Only completed or failed script audio can be regenerated.',
+      );
+    }
+
+    const updated = await this.scripts.updateOwned(scriptId, stationId, ownerId, {
+      status: 'queued',
+      audio: null,
+      durationSeconds: null,
+      error: null,
+      completedAt: null,
+      approvedAt: new Date(),
+    });
+
+    if (!updated) {
+      throw new ApiError(404, 'SCRIPT_NOT_FOUND', 'That script does not exist.');
+    }
+
+    scriptQueue.enqueue(scriptId.toHexString());
+    return toScriptView(updated);
+  }
+
   async getAudio(
     ownerIdInput: string,
     slugInput: string,

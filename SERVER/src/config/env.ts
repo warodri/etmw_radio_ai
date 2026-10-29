@@ -132,6 +132,9 @@ const envSchema = z.object({
   VOICE_STUDIO_TIMEOUT_MS: z.coerce.number().int().positive().default(900000),
   VOICE_STUDIO_ENGINE: z.string().trim().max(40).default(''),
   VOICE_STUDIO_PROFILE_OVERRIDE: z.string().trim().max(80).default(''),
+  VOICE_STUDIO_EFFECT_PRESET: z.string().trim().max(40).default('raw'),
+  VOICE_STUDIO_MAX_CHUNK_CHARS: z.coerce.number().int().min(0).default(0),
+  VOICE_STUDIO_CROSSFADE_MS: z.coerce.number().int().min(0).max(1000).default(0),
 
   SCRIPT_MAX_WORDS: z.coerce.number().int().positive().default(1300),
   SCRIPT_MAX_HOSTS: z.coerce.number().int().positive().max(8).default(2),

@@ -226,6 +226,13 @@ export class CreatorService {
     );
   }
 
+  rerenderScript(slug: string, scriptId: string): Observable<ScriptResponse> {
+    return this.http.post<ScriptResponse>(
+      `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts/${encodeURIComponent(scriptId)}/rerender`,
+      {},
+    );
+  }
+
   getScriptAudio(slug: string, scriptId: string): Observable<Blob> {
     return this.http.get(
       `${API_BASE_URL}/creator/stations/${encodeURIComponent(slug)}/scripts/${encodeURIComponent(scriptId)}/audio`,

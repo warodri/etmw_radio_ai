@@ -28,6 +28,11 @@ scriptRoutes.post(
   requireAuth,
   controller.retry,
 );
+scriptRoutes.post(
+  '/stations/:slug/scripts/:scriptId/rerender',
+  requireAuth,
+  controller.rerender,
+);
 scriptRoutes.get(
   '/stations/:slug/scripts/:scriptId/audio',
   requireAuth,

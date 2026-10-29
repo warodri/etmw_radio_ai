@@ -477,6 +477,24 @@ export class ScriptsDashboard implements OnInit, OnDestroy {
       });
   }
 
+  protected rerenderScript(script: ScriptView): void {
+    this.pageError.set(null);
+    this.notice.set(null);
+    this.creator.rerenderScript(this.slug, script.id).subscribe({
+      next: (response) => {
+        this.replaceScript(response.script);
+        if (this.draft()?.id === response.script.id) {
+          this.setDraft(response.script);
+        }
+        this.notice.set('The conversation is queued for a clean audio render.');
+        this.loadScripts(this.page(), true);
+      },
+      error: (error: unknown) => {
+        this.pageError.set(apiErrorMessage(error));
+      },
+    });
+  }
+
   protected retryScript(script: ScriptView): void {
     this.pageError.set(null);
     this.notice.set(null);
