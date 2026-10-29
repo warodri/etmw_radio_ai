@@ -50,6 +50,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'studio/:slug/creator/playlist',
+    title: 'Broadcast playlist · ETMW Radio AI',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./screens/studio/playlist-dashboard/playlist-dashboard').then(
+        (component) => component.PlaylistDashboard,
+      ),
+  },
+  {
     path: 'studio/:slug/creator/hosts',
     title: 'Host personas · ETMW Radio AI',
     canActivate: [authGuard],

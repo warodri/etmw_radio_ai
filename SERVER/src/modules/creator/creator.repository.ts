@@ -64,6 +64,23 @@ export class CreatorSongRepository {
     });
   }
 
+  async listCompletedByStation(
+    stationId: ObjectId,
+    ownerId: ObjectId,
+    limit = 200,
+  ): Promise<WithId<CreatorSongDocument>[]> {
+    return this.collection()
+      .find({
+        stationId,
+        ownerId,
+        status: 'completed',
+        songsSongId: { $ne: null },
+      })
+      .sort({ completedAt: -1, createdAt: -1 })
+      .limit(limit)
+      .toArray();
+  }
+
   async listPending(
     stationId: ObjectId,
     ownerId: ObjectId,

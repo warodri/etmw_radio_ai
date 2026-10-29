@@ -41,6 +41,9 @@ export async function connectDatabase(): Promise<Db> {
   await db
     .collection('creator_preferences')
     .createIndex({ stationId: 1, ownerId: 1 }, { unique: true });
+  await db
+    .collection('station_playlists')
+    .createIndex({ stationId: 1 }, { unique: true });
 
   logger.info('database.connected', { database: env.MONGO_DB_NAME });
   return db;

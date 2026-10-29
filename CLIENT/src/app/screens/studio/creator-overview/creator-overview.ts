@@ -3,10 +3,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CreatorDashboardResponse } from '../../../core/models/creator.models';
 import { HostPersona } from '../../../core/models/host.models';
+import { PlaylistView } from '../../../core/models/playlist.models';
 import { ScriptView } from '../../../core/models/script.models';
 import { RadioStation } from '../../../core/models/station.models';
 import { apiErrorMessage } from '../../../core/services/auth.service';
 import { CreatorService } from '../../../core/services/creator.service';
+import { PlaylistService } from '../../../core/services/playlist.service';
 import {
   DEFAULT_STATION_ARTWORK,
   StationService,
@@ -21,6 +23,7 @@ import {
 export class CreatorOverview implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly creator = inject(CreatorService);
+  private readonly playlists = inject(PlaylistService);
   private readonly stations = inject(StationService);
 
   private slug = '';
@@ -28,6 +31,7 @@ export class CreatorOverview implements OnInit {
   protected readonly dashboard = signal<CreatorDashboardResponse | null>(null);
   protected readonly hosts = signal<HostPersona[]>([]);
   protected readonly scripts = signal<ScriptView[]>([]);
+  protected readonly playlist = signal<PlaylistView | null>(null);
   protected readonly scriptTotal = signal(0);
   protected readonly loading = signal(true);
   protected readonly pageError = signal<string | null>(null);
@@ -39,6 +43,10 @@ export class CreatorOverview implements OnInit {
     () => this.dashboard()?.pagination.total ?? 0,
   );
   protected readonly scriptsCount = computed(() => this.scriptTotal());
+  protected readonly playlistItems = computed(() => this.playlist()?.itemCount ?? 0);
+  protected readonly playlistDuration = computed(
+    () => this.playlist()?.totalDurationSeconds ?? 0,
+  );
   protected readonly hostsPreview = computed(() => this.hosts().slice(0, 2));
   protected readonly songsPreview = computed(
     () => this.dashboard()?.songs.slice(0, 2) ?? [],
@@ -83,12 +91,14 @@ export class CreatorOverview implements OnInit {
       dashboard: this.creator.getDashboard(this.slug, 1, 2),
       hosts: this.creator.getHosts(this.slug),
       scripts: this.creator.getScripts(this.slug, 1, 2),
+      playlist: this.playlists.getEditor(this.slug),
     }).subscribe({
-      next: ({ dashboard, hosts, scripts }) => {
+      next: ({ dashboard, hosts, scripts, playlist }) => {
         this.dashboard.set(dashboard);
         this.hosts.set(hosts.hosts);
         this.scripts.set(scripts.scripts);
         this.scriptTotal.set(scripts.pagination.total);
+        this.playlist.set(playlist.playlist);
         this.loading.set(false);
       },
       error: (error: unknown) => {
@@ -121,6 +131,22 @@ export class CreatorOverview implements OnInit {
 
   protected countLabel(count: number, singular: string, plural: string): string {
     return `${count} ${count === 1 ? singular : plural}`;
+  }
+
+  protected playlistDurationLabel(): string {
+    const safe = Math.max(0, Math.floor(this.playlistDuration()));
+    const hours = Math.floor(safe / 3600);
+    const minutes = Math.floor((safe % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours} h ${String(minutes).padStart(2, '0')} min`;
+    }
+
+    if (minutes > 0) {
+      return `${minutes} min`;
+    }
+
+    return `${safe} s`;
   }
 
   private summarize(names: string[], total: number, empty: string): string {

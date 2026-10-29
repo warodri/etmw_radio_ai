@@ -160,8 +160,14 @@
             </div>
           </dl>
 
-          @if (current.isOwner) {
-            <div class="mt-7 flex flex-wrap gap-2">
+          <div class="mt-7 flex flex-wrap gap-2">
+            <button type="button" class="btn-primary px-4 py-2.5" (click)="playStation(current)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-4 w-4">
+                <path d="M8 5.5v13l10-6.5Z" />
+              </svg>
+              Listen live
+            </button>
+            @if (current.isOwner) {
               <a
                 [routerLink]="['/studio', current.slug, 'edit']"
                 class="btn-primary px-4 py-2.5"
@@ -202,8 +208,8 @@
                 Creator dashboard
               </a>
               <a routerLink="/studio" class="btn-secondary">Open studio</a>
-            </div>
-          }
+            }
+          </div>
         </div>
       </div>
 

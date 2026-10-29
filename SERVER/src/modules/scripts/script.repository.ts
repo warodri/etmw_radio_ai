@@ -84,6 +84,27 @@ export class ScriptRepository {
     );
   }
 
+  async listReadyByStation(
+    stationId: ObjectId,
+    ownerId: ObjectId,
+    limit = 200,
+  ): Promise<WithId<ScriptDocument>[]> {
+    return this.collection()
+      .find(
+        {
+          stationId,
+          ownerId,
+          status: 'completed',
+          'audio.mimeType': { $exists: true },
+          durationSeconds: { $gt: 0 },
+        },
+        WITHOUT_AUDIO_DATA,
+      )
+      .sort({ completedAt: -1, createdAt: -1 })
+      .limit(limit)
+      .toArray();
+  }
+
   async listQueued(limit = 50): Promise<WithId<ScriptDocument>[]> {
     return this.collection()
       .find({ status: 'queued' }, WITHOUT_AUDIO_DATA)

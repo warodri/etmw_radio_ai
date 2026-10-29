@@ -6,6 +6,7 @@ import {
   STATION_STATUS_LABELS,
 } from '../../core/models/station.models';
 import { apiErrorMessage } from '../../core/services/auth.service';
+import { RadioPlayerService } from '../../core/services/radio-player.service';
 import {
   DEFAULT_STATION_ARTWORK,
   StationService,
@@ -20,6 +21,7 @@ import {
 export class StationDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly stationService = inject(StationService);
+  private readonly player = inject(RadioPlayerService);
 
   protected readonly station = signal<RadioStation | null>(null);
   protected readonly loading = signal(true);
@@ -57,6 +59,10 @@ export class StationDetail implements OnInit {
 
   protected artworkUrl(station: RadioStation): string | null {
     return this.stationService.artworkUrl(station);
+  }
+
+  protected playStation(station: RadioStation): void {
+    this.player.toggleStation(station);
   }
 
   protected statusPillClass(station: RadioStation): string {

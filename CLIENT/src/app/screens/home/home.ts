@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { RadioStation } from '../../core/models/station.models';
 import { apiErrorMessage, AuthService } from '../../core/services/auth.service';
+import { RadioPlayerService } from '../../core/services/radio-player.service';
 import {
   DEFAULT_STATION_ARTWORK,
   StationService,
@@ -15,6 +16,7 @@ import {
 })
 export class Home implements OnInit {
   private readonly stationService = inject(StationService);
+  private readonly player = inject(RadioPlayerService);
   protected readonly auth = inject(AuthService);
 
   protected readonly bars = [34, 58, 42, 76, 50, 88, 44, 68, 38, 82, 52, 72, 36, 62, 46, 80];
@@ -46,5 +48,11 @@ export class Home implements OnInit {
 
   protected artworkUrl(station: RadioStation): string | null {
     return this.stationService.artworkUrl(station);
+  }
+
+  protected playStation(station: RadioStation, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.player.toggleStation(station);
   }
 }

@@ -1,4 +1,4 @@
-<div class="relative flex min-h-dvh flex-col overflow-x-hidden">
+<div class="relative flex min-h-dvh flex-col overflow-x-hidden" [class.pb-28]="player.visible()">
   <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
     <div
       class="absolute -right-24 -top-32 h-80 w-80 rounded-full bg-brand-500/15 blur-[110px] sm:h-[28rem] sm:w-[28rem]"
@@ -34,4 +34,6 @@
       </p>
     </div>
   </footer>
+
+  <app-radio-player />
 </div>

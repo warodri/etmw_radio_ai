@@ -8,6 +8,7 @@ import { AuthController } from './modules/auth/auth.controller.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { creatorRoutes } from './modules/creator/creator.routes.js';
 import { hostCreatorRoutes, hostPublicRoutes } from './modules/hosts/host.routes.js';
+import { playlistCreatorRoutes, radioPublicRoutes } from './modules/playlist/playlist.routes.js';
 import { scriptRoutes } from './modules/scripts/script.routes.js';
 import { stationRoutes } from './modules/stations/station.routes.js';
 
@@ -49,9 +50,11 @@ export function createApp(): express.Application {
   app.use('/api/auth', authRoutes);
   app.get('/api/me', requireAuth, authController.me);
   app.use('/api/stations', stationRoutes);
+  app.use('/api/stations', radioPublicRoutes);
   app.use('/api/creator', creatorRoutes);
   app.use('/api/creator', hostCreatorRoutes);
   app.use('/api/creator', scriptRoutes);
+  app.use('/api/creator', playlistCreatorRoutes);
   app.use('/api/hosts', hostPublicRoutes);
 
   app.use(notFoundMiddleware);

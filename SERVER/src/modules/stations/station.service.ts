@@ -11,6 +11,7 @@ import {
   CreatorSongRepository,
 } from '../creator/creator.repository.js';
 import { HostRepository } from '../hosts/host.repository.js';
+import { PlaylistRepository } from '../playlist/playlist.repository.js';
 import { ScriptRepository } from '../scripts/script.repository.js';
 import { StationRepository } from './station.repository.js';
 import {
@@ -76,6 +77,7 @@ export class StationService {
     private readonly creatorPreferences = new CreatorPreferencesRepository(),
     private readonly hosts = new HostRepository(),
     private readonly scripts = new ScriptRepository(),
+    private readonly playlists = new PlaylistRepository(),
   ) {}
 
   async listPublic(): Promise<StationView[]> {
@@ -325,6 +327,7 @@ export class StationService {
     await this.creatorPreferences.deleteByStation(id, ownerId);
     await this.hosts.deleteByStation(id, ownerId);
     await this.scripts.deleteByStation(id, ownerId);
+    await this.playlists.deleteByStation(id, ownerId);
   }
 
   async getArtwork(
