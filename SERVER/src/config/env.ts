@@ -111,7 +111,8 @@ const envSchema = z.object({
     .string()
     .url()
     .default("https://ollama--warodri.entertomyworld.com"),
-  PHONON_MODEL: z.string().default("phonon"),
+  PHONON_BASE_URL: z.string().url().default("http://127.0.0.1:3902"),
+  PHONON_MODEL: z.string().default("auto"),
   PHONON_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
 
   OLLAMA_TEXT_MODEL: z.string().default('qwen3-vl:32b-instruct'),
@@ -127,7 +128,9 @@ const envSchema = z.object({
   VOICE_STUDIO_API_URL: z
     .string()
     .url()
-    .default('https://voice-studio--warodri.entertomyworld.com'),
+    // The public voice-studio tunnel was retired. The voice stack runs beside this server;
+    // this matches SERVER/.env.example.
+    .default('http://127.0.0.1:3902'),
   VOICE_STUDIO_API_KEY: z.string().default(''),
   VOICE_STUDIO_TIMEOUT_MS: z.coerce.number().int().positive().default(900000),
   VOICE_STUDIO_ENGINE: z.string().trim().max(40).default(''),
