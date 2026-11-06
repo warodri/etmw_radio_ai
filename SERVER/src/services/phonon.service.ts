@@ -95,7 +95,7 @@ class PhononService {
 
     try {
       response = await fetch(
-        `${env.OLLAMA_BASE_URL.replace(/\/+$/, "")}/v1/audio/speech`,
+        `${env.PHONON_BASE_URL.replace(/\/+$/, "")}/v1/audio/speech`,
         {
           method: "POST",
           headers: {
